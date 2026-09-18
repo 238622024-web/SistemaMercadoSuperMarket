@@ -1,0 +1,23 @@
+{
+  "name": "sistema-mercado-supermarket",
+  "version": "1.0.0",
+  "description": "Sistema de supermercado com Node.js e Supabase",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "supabase",
+    "node",
+    "mercado",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.53.0",
+    "dotenv": "^17.0.1",
+    "express": "^4.21.2"
+  }
+}

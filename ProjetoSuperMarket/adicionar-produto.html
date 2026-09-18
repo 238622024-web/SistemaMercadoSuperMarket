@@ -44,6 +44,29 @@
             width: 80px;
         }
 
+        .sidebar.collapsed .nav-text,
+        .sidebar.collapsed .nav-arrow,
+        .sidebar.collapsed .nav-section-title,
+        .sidebar.collapsed .submenu,
+        .sidebar.collapsed .logo span,
+        .sidebar.collapsed .user-info,
+        .sidebar.collapsed .user-profile svg {
+            display: none;
+        }
+
+        .sidebar.collapsed .logo {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 12px 0;
+        }
+
+        .sidebar.collapsed .user-profile {
+            justify-content: center;
+        }
+
         /* Logo */
         .sidebar-header {
             padding: 24px 20px;
@@ -244,6 +267,10 @@
             flex: 1;
             margin-left: 280px;
             transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 80px;
         }
 
         /* Header */

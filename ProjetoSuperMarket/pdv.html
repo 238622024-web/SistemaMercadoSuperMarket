@@ -25,6 +25,8 @@
         .app-container {
             display: flex;
             height: 100vh;
+            position: relative;
+            overflow: hidden;
         }
 
         /* Sidebar */
@@ -37,6 +39,7 @@
             transition: all 0.3s ease;
             z-index: 1000;
             box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
         }
 
         .sidebar.collapsed {
@@ -51,6 +54,23 @@
         .sidebar.collapsed .user-info,
         .sidebar.collapsed .user-profile svg {
             display: none;
+        }
+
+        .sidebar.collapsed .logo {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 12px 0;
+        }
+
+        .sidebar.collapsed .user-profile {
+            justify-content: center;
+        }
+
+        .sidebar.mobile-hidden {
+            transform: translateX(-100%);
         }
 
         .sidebar-header {
@@ -968,9 +988,9 @@
                 right: 0;
                 top: 0;
                 bottom: 0;
-                width: 450px;
+                width: min(420px, 88vw);
                 transform: translateX(100%);
-                transition: transform 0.3s;
+                transition: transform 0.3s ease;
                 z-index: 1000;
                 box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
             }
@@ -1012,6 +1032,46 @@
         }
 
         @media (max-width: 768px) {
+            .app-container {
+                min-height: 100vh;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: min(82vw, 280px);
+                transform: translateX(-100%);
+                z-index: 1001;
+            }
+
+            .sidebar.mobile-visible {
+                transform: translateX(0);
+            }
+
+            .sidebar.collapsed {
+                width: min(82vw, 280px);
+            }
+
+            .sidebar.collapsed .nav-text,
+            .sidebar.collapsed .nav-arrow,
+            .sidebar.collapsed .nav-section-title,
+            .sidebar.collapsed .submenu,
+            .sidebar.collapsed .logo span,
+            .sidebar.collapsed .user-info,
+            .sidebar.collapsed .user-profile svg {
+                display: block;
+            }
+
+            .sidebar.collapsed .logo,
+            .sidebar.collapsed .nav-link,
+            .sidebar.collapsed .user-profile {
+                justify-content: flex-start;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
             .pdv-header {
                 padding: 16px 20px;
             }
@@ -1306,6 +1366,46 @@
     </div>
 
     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('mobile-visible');
+                if (overlay) {
+                    overlay.classList.toggle('active', sidebar.classList.contains('mobile-visible'));
+                }
+            } else {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    document.querySelectorAll('.submenu').forEach(submenu => submenu.classList.remove('open'));
+                    document.querySelectorAll('.nav-link.expanded').forEach(link => link.classList.remove('expanded'));
+                }
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('mobile-visible');
+                if (overlay) overlay.classList.remove('active');
+            } else {
+                sidebar.classList.remove('collapsed');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.remove('mobile-visible');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+
         // ========================================
         // PRODUTOS - Conecte aqui com seu backend
         // ========================================
