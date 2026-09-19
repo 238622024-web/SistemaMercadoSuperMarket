@@ -377,57 +377,65 @@
             line-height: 1.6;
         }
 
-        .empty-state {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 20px;
-            min-height: 420px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-            padding: 32px;
-        }
-
-        .empty-box {
-            text-align: center;
-            max-width: 540px;
-        }
-
-        .empty-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            border-radius: 22px;
-            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4f46e5;
-            font-size: 38px;
-        }
-
-        .empty-box h2 {
-            font-size: 30px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            color: #0f172a;
-        }
-
-        .empty-box p {
-            color: #64748b;
-            font-size: 16px;
-            line-height: 1.7;
-        }
+        .dashboard-toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+        .dashboard-toolbar h2 { color: #0f172a; font-size: 24px; margin-bottom: 6px; }
+        .dashboard-toolbar p { color: #64748b; font-size: 13px; }
+        .toolbar-actions { display: flex; align-items: center; gap: 10px; }
+        .period-select, .export-button { height: 40px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font: inherit; font-size: 13px; font-weight: 600; padding: 0 12px; }
+        .period-select { cursor: pointer; }
+        .export-button { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; background: #0f766e; border-color: #0f766e; color: #fff; }
+        .export-button:hover { background: #115e59; }
+        .export-button svg { width: 16px; height: 16px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .stat-card, .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04); }
+        .stat-card { padding: 20px; position: relative; overflow: hidden; }
+        .stat-card::after { content: ''; position: absolute; width: 72px; height: 72px; right: -26px; top: -28px; border-radius: 50%; background: rgba(15, 118, 110, 0.09); }
+        .stat-label { color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+        .stat-value { color: #0f172a; font-size: 27px; font-weight: 800; margin: 9px 0 8px; }
+        .stat-meta { color: #15803d; font-size: 12px; font-weight: 700; }
+        .stat-meta.neutral { color: #64748b; }
+        .analysis-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, .85fr); gap: 16px; margin-bottom: 16px; }
+        .panel { padding: 22px; }
+        .panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+        .panel-title { color: #0f172a; font-size: 16px; font-weight: 800; }
+        .panel-caption { color: #64748b; font-size: 12px; margin-top: 5px; }
+        .panel-link { color: #0f766e; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+        .chart-wrap { height: 270px; position: relative; }
+        #salesChart { width: 100%; height: 100%; display: block; }
+        .category-list { display: grid; gap: 17px; }
+        .category-row { display: grid; gap: 7px; }
+        .category-label { display: flex; justify-content: space-between; color: #334155; font-size: 12px; font-weight: 600; }
+        .category-label span:last-child { color: #0f172a; font-weight: 800; }
+        .progress-track { height: 8px; border-radius: 8px; background: #e2e8f0; overflow: hidden; }
+        .progress-value { height: 100%; border-radius: inherit; background: #0f766e; }
+        .progress-value.orange { background: #f59e0b; }
+        .progress-value.blue { background: #3b82f6; }
+        .progress-value.red { background: #ef4444; }
+        .bottom-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: 16px; }
+        .product-list { display: grid; gap: 4px; }
+        .product-row { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
+        .product-row:last-child { border-bottom: 0; }
+        .product-rank { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: #f0fdfa; color: #0f766e; font-size: 12px; font-weight: 800; }
+        .product-name { color: #1e293b; font-size: 13px; font-weight: 700; }
+        .product-detail { color: #94a3b8; font-size: 11px; margin-top: 3px; }
+        .product-total { color: #0f172a; font-size: 13px; font-weight: 800; }
+        .alert-list { display: grid; gap: 10px; }
+        .alert-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 9px; background: #fff7ed; border: 1px solid #fed7aa; }
+        .alert-item.critical { background: #fef2f2; border-color: #fecaca; }
+        .alert-icon { color: #ea580c; font-size: 18px; }
+        .critical .alert-icon { color: #dc2626; }
+        .alert-name { color: #334155; font-size: 12px; font-weight: 700; }
+        .alert-detail { color: #9a3412; font-size: 11px; margin-top: 3px; }
+        .critical .alert-detail { color: #b91c1c; }
+        .simulated-badge { display: inline-flex; align-items: center; gap: 6px; color: #0f766e; font-size: 12px; font-weight: 700; }
+        .simulated-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
 
         @media (max-width: 1100px) {
             .stats-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
+            .analysis-grid, .bottom-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 768px) {
@@ -460,6 +468,10 @@
             .page-content {
                 padding: 20px;
             }
+
+            .dashboard-toolbar { align-items: stretch; flex-direction: column; }
+            .toolbar-actions { justify-content: space-between; }
+            .period-select, .export-button { flex: 1; }
 
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -722,12 +734,96 @@
                     <p class="page-subtitle">Acompanhe métricas do negócio, desempenho geral e movimentos mais relevantes do mercado.</p>
                 </div>
 
-                <div class="empty-state">
-                    <div class="empty-box">
-                        <div class="empty-icon">📊</div>
-                        <h2>Página em branco</h2>
-                        <p>Esta área está pronta para receber os dados reais de análise do seu sistema, como faturamento, vendas, produtos mais vendidos e indicadores do negócio.</p>
+                <div class="dashboard-toolbar">
+                    <div>
+                        <h2>Visão geral do negócio</h2>
+                        <p>Desempenho comercial e pontos de atenção da operação.</p>
                     </div>
+                    <div class="toolbar-actions">
+                        <select class="period-select" id="periodSelect" aria-label="Período da análise">
+                            <option value="7">Últimos 7 dias</option>
+                            <option value="30" selected>Últimos 30 dias</option>
+                            <option value="90">Últimos 90 dias</option>
+                        </select>
+                        <button class="export-button" id="exportButton" type="button">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+                            Exportar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <article class="stat-card">
+                        <div class="stat-label">Faturamento</div>
+                        <div class="stat-value" id="revenueValue">R$ 84.680</div>
+                        <div class="stat-meta">↑ 12,8% vs. período anterior</div>
+                    </article>
+                    <article class="stat-card">
+                        <div class="stat-label">Vendas realizadas</div>
+                        <div class="stat-value" id="salesValue">1.284</div>
+                        <div class="stat-meta">↑ 8,4% vs. período anterior</div>
+                    </article>
+                    <article class="stat-card">
+                        <div class="stat-label">Ticket médio</div>
+                        <div class="stat-value" id="ticketValue">R$ 65,95</div>
+                        <div class="stat-meta">↑ 4,1% vs. período anterior</div>
+                    </article>
+                    <article class="stat-card">
+                        <div class="stat-label">Margem bruta</div>
+                        <div class="stat-value" id="marginValue">28,6%</div>
+                        <div class="stat-meta neutral">Meta mensal: 30%</div>
+                    </article>
+                </div>
+
+                <div class="analysis-grid">
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Faturamento ao longo do período</div>
+                                <div class="panel-caption">Receita bruta por dia, em reais</div>
+                            </div>
+                            <span class="simulated-badge">Dados simulados</span>
+                        </div>
+                        <div class="chart-wrap"><canvas id="salesChart" aria-label="Gráfico de faturamento por dia"></canvas></div>
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Vendas por categoria</div>
+                                <div class="panel-caption">Participação no faturamento</div>
+                            </div>
+                        </div>
+                        <div class="category-list" id="categoryList"></div>
+                    </section>
+                </div>
+
+                <div class="bottom-grid">
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Produtos mais vendidos</div>
+                                <div class="panel-caption">Itens com maior saída no período</div>
+                            </div>
+                            <a class="panel-link" href="produtos.html">Ver produtos</a>
+                        </div>
+                        <div class="product-list" id="productList"></div>
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Atenção necessária</div>
+                                <div class="panel-caption">Indicadores para agir hoje</div>
+                            </div>
+                            <a class="panel-link" href="estoque.html">Estoque</a>
+                        </div>
+                        <div class="alert-list">
+                            <div class="alert-item critical"><span class="alert-icon">!</span><div><div class="alert-name">Arroz Tipo 1 5kg</div><div class="alert-detail">2 unidades em estoque</div></div></div>
+                            <div class="alert-item"><span class="alert-icon">!</span><div><div class="alert-name">Leite Integral 1L</div><div class="alert-detail">Estoque abaixo do mínimo</div></div></div>
+                            <div class="alert-item"><span class="alert-icon">!</span><div><div class="alert-name">Óleo de Soja 900ml</div><div class="alert-detail">Validade em 18 dias</div></div></div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </main>
@@ -737,51 +833,125 @@
 
     <script src="sidebar.js"></script>
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('mobile-visible');
-                if (overlay) {
-                    overlay.classList.toggle('active');
-                }
-            } else {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-            }
-        }
-
-        function toggleMobileSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('mobile-visible');
-            if (overlay) {
-                overlay.classList.toggle('active');
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            if (overlay) {
-                overlay.addEventListener('click', toggleMobileSidebar);
-            }
-
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('collapsed');
-            }
-
-            window.addEventListener('resize', function () {
-                if (window.innerWidth > 768) {
-                    sidebar.classList.remove('mobile-visible');
-                    mainContent.classList.remove('expanded');
-                    if (overlay) overlay.classList.remove('active');
-                }
+            const chartCanvas = document.getElementById('salesChart');
+            const periodSelect = document.getElementById('periodSelect');
+            const dailyRevenue = Array.from({ length: 90 }, function (_, index) {
+                const weeklyEffect = [0.84, 0.91, 0.98, 1.03, 1.12, 1.28, 1.19][index % 7];
+                const trend = 0.86 + (index / 90) * 0.22;
+                return Math.round((2100 + ((index * 173) % 980)) * weeklyEffect * trend);
             });
+            const categoryData = [
+                { name: 'Mercearia', value: 38, color: '' },
+                { name: 'Bebidas', value: 24, color: 'orange' },
+                { name: 'Hortifruti', value: 18, color: 'blue' },
+                { name: 'Açougue', value: 12, color: 'red' },
+                { name: 'Limpeza', value: 8, color: '' }
+            ];
+            const productData = [
+                ['Arroz Tipo 1 5kg', '342 unidades vendidas', 'R$ 8.892'],
+                ['Refrigerante Cola 2L', '286 unidades vendidas', 'R$ 5.434'],
+                ['Leite Integral 1L', '274 unidades vendidas', 'R$ 1.918'],
+                ['Cerveja Lata 350ml', '248 unidades vendidas', 'R$ 1.736'],
+                ['Cafe Torrado 500g', '193 unidades vendidas', 'R$ 3.377']
+            ];
+
+            function formatCurrency(value) {
+                return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+            }
+
+            function updateCategories() {
+                document.getElementById('categoryList').innerHTML = categoryData.map(function (category) {
+                    return '<div class="category-row"><div class="category-label"><span>' + category.name + '</span><span>' + category.value + '%</span></div><div class="progress-track"><div class="progress-value ' + category.color + '" style="width:' + category.value + '%"></div></div></div>';
+                }).join('');
+            }
+
+            function updateProducts() {
+                document.getElementById('productList').innerHTML = productData.map(function (product, index) {
+                    return '<div class="product-row"><span class="product-rank">' + (index + 1) + '</span><div><div class="product-name">' + product[0] + '</div><div class="product-detail">' + product[1] + '</div></div><span class="product-total">' + product[2] + '</span></div>';
+                }).join('');
+            }
+
+            function drawChart(values) {
+                const context = chartCanvas.getContext('2d');
+                const width = chartCanvas.clientWidth;
+                const height = chartCanvas.clientHeight;
+                const ratio = window.devicePixelRatio || 1;
+                chartCanvas.width = width * ratio;
+                chartCanvas.height = height * ratio;
+                context.scale(ratio, ratio);
+                context.clearRect(0, 0, width, height);
+                const padding = { top: 12, right: 10, bottom: 28, left: 46 };
+                const chartWidth = width - padding.left - padding.right;
+                const chartHeight = height - padding.top - padding.bottom;
+                const maximum = Math.ceil(Math.max.apply(null, values) / 1000) * 1000;
+                const minimum = Math.floor(Math.min.apply(null, values) / 1000) * 1000;
+                const range = maximum - minimum || 1;
+
+                context.font = '11px Inter, sans-serif';
+                context.strokeStyle = '#e2e8f0';
+                context.fillStyle = '#94a3b8';
+                context.lineWidth = 1;
+                for (let line = 0; line <= 3; line += 1) {
+                    const y = padding.top + (chartHeight / 3) * line;
+                    context.beginPath();
+                    context.moveTo(padding.left, y);
+                    context.lineTo(width - padding.right, y);
+                    context.stroke();
+                    context.fillText(formatCurrency(maximum - (range / 3) * line), 0, y + 4);
+                }
+
+                const points = values.map(function (value, index) {
+                    return { x: padding.left + (chartWidth / Math.max(values.length - 1, 1)) * index, y: padding.top + chartHeight - ((value - minimum) / range) * chartHeight };
+                });
+                const gradient = context.createLinearGradient(0, padding.top, 0, height);
+                gradient.addColorStop(0, 'rgba(15, 118, 110, .24)');
+                gradient.addColorStop(1, 'rgba(15, 118, 110, 0)');
+                context.beginPath();
+                context.moveTo(points[0].x, height - padding.bottom);
+                points.forEach(function (point) { context.lineTo(point.x, point.y); });
+                context.lineTo(points[points.length - 1].x, height - padding.bottom);
+                context.closePath();
+                context.fillStyle = gradient;
+                context.fill();
+                context.beginPath();
+                points.forEach(function (point, index) { index === 0 ? context.moveTo(point.x, point.y) : context.lineTo(point.x, point.y); });
+                context.strokeStyle = '#0f766e';
+                context.lineWidth = 2.5;
+                context.stroke();
+                context.fillStyle = '#64748b';
+                context.textAlign = 'center';
+                [0, Math.floor(values.length / 2), values.length - 1].forEach(function (index) {
+                    context.fillText('D' + (index + 1), points[index].x, height - 8);
+                });
+                context.textAlign = 'start';
+            }
+
+            function updateDashboard() {
+                const period = Number(periodSelect.value);
+                const values = dailyRevenue.slice(-period);
+                const revenue = values.reduce(function (total, value) { return total + value; }, 0);
+                const sales = Math.round(revenue / (period === 7 ? 64 : period === 30 ? 66 : 68));
+                document.getElementById('revenueValue').textContent = formatCurrency(revenue);
+                document.getElementById('salesValue').textContent = sales.toLocaleString('pt-BR');
+                document.getElementById('ticketValue').textContent = (revenue / sales).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                document.getElementById('marginValue').textContent = (27.2 + period / 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+                drawChart(values);
+            }
+
+            periodSelect.addEventListener('change', updateDashboard);
+            window.addEventListener('resize', updateDashboard);
+            document.getElementById('exportButton').addEventListener('click', function () {
+                const csv = 'Indicador;Valor\nFaturamento;' + document.getElementById('revenueValue').textContent + '\nVendas;' + document.getElementById('salesValue').textContent + '\nTicket medio;' + document.getElementById('ticketValue').textContent + '\nMargem bruta;' + document.getElementById('marginValue').textContent;
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+                link.download = 'analise-mercado.csv';
+                link.click();
+                URL.revokeObjectURL(link.href);
+            });
+            updateCategories();
+            updateProducts();
+            updateDashboard();
         });
     </script>
 </body>
