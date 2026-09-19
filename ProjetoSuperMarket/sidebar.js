@@ -15,7 +15,10 @@ function toggleSubmenu(event, submenuId) {
     // Se o sidebar estiver colapsado, primeiro expanda-o
     if (sidebar.classList.contains('collapsed')) {
         sidebar.classList.remove('collapsed');
-        document.getElementById('mainContent').classList.remove('expanded');
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+            mainContent.classList.remove('expanded');
+        }
     }
     
     // Toggle classe expanded no link
@@ -33,7 +36,9 @@ function toggleSidebar() {
     if (window.innerWidth > 768) {
         // Desktop: colapsar/expandir
         sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
+        if (mainContent) {
+            mainContent.classList.toggle('expanded');
+        }
         
         // Fechar todos os submenus quando colapsar
         if (sidebar.classList.contains('collapsed')) {
@@ -91,7 +96,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             // Mobile: remover classe collapsed
             sidebar.classList.remove('collapsed');
-            mainContent.classList.remove('expanded');
+            if (mainContent) {
+                mainContent.classList.remove('expanded');
+            }
         }
     });
 });
