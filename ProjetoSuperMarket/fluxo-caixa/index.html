@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fluxo de Caixa - Mercado Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2 2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-8-5z"
+              />
+            </svg>
+          </div>
+          <span>Mercado Pro</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Principal</div>
+        <a class="nav-link" href="../dashboard/"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg
+          ><span class="nav-text">Início</span></a
+        ><a class="nav-link" href="../analise/"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path
+              d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
+            /></svg
+          ><span class="nav-text">Análise</span></a
+        >
+        <div class="nav-section-title">Gerenciamento</div>
+        <a class="nav-link" href="#" onclick="menuToggle(event, 'sales')"
+          ><span class="nav-text">Vendas</span
+          ><svg class="nav-arrow" viewBox="0 0 24 24">
+            <path d="m7 10 5 5 5-5z" /></svg
+        ></a>
+        <div class="submenu" id="sales">
+          <a class="submenu-link" href="../pdv/"
+            ><span class="dot"></span>PDV (Caixa)</a
+          ><a class="submenu-link" href="../vendas/"
+            ><span class="dot"></span>Histórico de Vendas</a
+          ><a class="submenu-link" href="../relatorios/"
+            ><span class="dot"></span>Relatórios</a
+          >
+        </div>
+        <a
+          class="nav-link active expanded"
+          href="#"
+          onclick="menuToggle(event, 'finance')"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path
+              d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55-2.43-3.81-4.7-4.4z"
+            /></svg
+          ><span class="nav-text">Financeiro</span
+          ><svg class="nav-arrow" viewBox="0 0 24 24">
+            <path d="m7 10 5 5 5-5z" /></svg
+        ></a>
+        <div class="submenu open" id="finance">
+          <a class="submenu-link" href="../caixa/"
+            ><span class="dot"></span>Controle de Caixa</a
+          ><a class="submenu-link" href="../contas/"
+            ><span class="dot"></span>Contas a Pagar/Receber</a
+          ><a class="submenu-link active" href="../fluxo-caixa/"
+            ><span class="dot"></span>Fluxo de Caixa</a
+          >
+        </div>
+        <div class="nav-section-title">Sistema</div>
+        <a class="nav-link" href="../configuracoes/"
+          ><span class="nav-text">Configurações</span></a
+        >
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="avatar">A</div>
+          <div class="user-info">
+            <span class="user-name">Administrador</span
+            ><span class="user-role">Gerente</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="overlay" id="overlay"></div>
+    <main class="main" id="main">
+      <header class="header">
+        <div class="header-left">
+          <button
+            class="menu"
+            onclick="toggleSidebar()"
+            aria-label="Abrir menu"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+          </button>
+          <h1>Fluxo de Caixa</h1>
+        </div>
+      </header>
+      <section class="content">
+        <div class="crumb">
+          <a href="../dashboard/">Início</a><span>/</span
+          ><span>Financeiro</span><span>/</span><span>Fluxo de Caixa</span>
+        </div>
+        <div class="intro">
+          <h2>Fluxo de caixa</h2>
+          <p>
+            Visualize entradas, saídas e a projeção de saldo para planejar a
+            operação.
+          </p>
+        </div>
+        <div class="toolbar">
+          <div class="field">
+            <label for="period">Período</label
+            ><select id="period">
+              <option>Próximos 7 dias</option>
+              <option selected>Próximos 30 dias</option>
+              <option>Próximos 90 dias</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="unit">Unidade</label
+            ><select id="unit">
+              <option>Todas as unidades</option>
+              <option>Loja principal</option>
+              <option>Loja 02</option>
+            </select>
+          </div>
+          <button class="button" onclick="alert('Fluxo atualizado')">
+            Atualizar fluxo</button
+          ><button class="button secondary" onclick="window.print()">
+            Exportar
+          </button>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Saldo inicial</div>
+            <div class="value">R$ 24.680</div>
+            <div class="meta">Disponível hoje</div>
+          </div>
+          <div class="stat">
+            <div class="label">Entradas previstas</div>
+            <div class="value">R$ 42.360</div>
+            <div class="meta">Próximos 30 dias</div>
+          </div>
+          <div class="stat">
+            <div class="label">Saídas previstas</div>
+            <div class="value">R$ 31.840</div>
+            <div class="meta red">Compromissos mapeados</div>
+          </div>
+          <div class="stat">
+            <div class="label">Saldo projetado</div>
+            <div class="value">R$ 35.200</div>
+            <div class="meta">+42,6% no período</div>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="panel">
+            <h3>Projeção diária</h3>
+            <div class="caption">
+              Entradas e saídas previstas para os próximos 7 dias
+            </div>
+            <div class="legend">
+              <span><i></i>Entradas</span><span><i class="red"></i>Saídas</span>
+            </div>
+            <div class="chart">
+              <div class="bar-group">
+                <div class="bar" style="height: 62%"></div>
+                <div class="bar out" style="height: 38%"></div>
+                <span class="day">Hoje</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 78%"></div>
+                <div class="bar out" style="height: 44%"></div>
+                <span class="day">22/09</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 54%"></div>
+                <div class="bar out" style="height: 72%"></div>
+                <span class="day">23/09</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 88%"></div>
+                <div class="bar out" style="height: 51%"></div>
+                <span class="day">24/09</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 66%"></div>
+                <div class="bar out" style="height: 83%"></div>
+                <span class="day">25/09</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 92%"></div>
+                <div class="bar out" style="height: 46%"></div>
+                <span class="day">26/09</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 72%"></div>
+                <div class="bar out" style="height: 35%"></div>
+                <span class="day">27/09</span>
+              </div>
+            </div>
+            <div class="axis">
+              <span>R$ 0</span><span>R$ 5 mil</span><span>R$ 10 mil</span>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Resumo projetado</h3>
+            <div class="caption">Consolidação do período</div>
+            <div class="summary">
+              <div class="summary-row">
+                <span>Vendas previstas</span><strong>R$ 38.640</strong>
+              </div>
+              <div class="summary-row">
+                <span>Recebimentos</span><strong>R$ 3.720</strong>
+              </div>
+              <div class="summary-row">
+                <span>Fornecedores</span><strong>R$ 18.420</strong>
+              </div>
+              <div class="summary-row">
+                <span>Despesas fixas</span><strong>R$ 13.420</strong>
+              </div>
+              <div class="balance">
+                <span>Saldo ao final do período</span><strong>R$ 35.200</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel table-panel">
+          <h3>Próximos lançamentos</h3>
+          <div class="caption">Eventos que impactam o saldo projetado</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Descrição</th>
+                  <th>Categoria</th>
+                  <th>Tipo</th>
+                  <th>Valor</th>
+                  <th>Saldo após lançamento</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>22/09/2026</td>
+                  <td><strong>Pedido PC-00215</strong></td>
+                  <td>Fornecedores</td>
+                  <td class="out">Saída</td>
+                  <td class="out">- R$ 1.920</td>
+                  <td>R$ 28.460</td>
+                </tr>
+                <tr>
+                  <td>24/09/2026</td>
+                  <td><strong>Recebimento corporativo</strong></td>
+                  <td>Vendas</td>
+                  <td class="in">Entrada</td>
+                  <td class="in">+ R$ 4.850</td>
+                  <td>R$ 33.310</td>
+                </tr>
+                <tr>
+                  <td>27/09/2026</td>
+                  <td><strong>Pedido PC-00218</strong></td>
+                  <td>Fornecedores</td>
+                  <td class="out">Saída</td>
+                  <td class="out">- R$ 4.860</td>
+                  <td>R$ 35.200</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+      <script src="app.js"></script>
+      <script src="../sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Análise - Mercado Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+  <body>
+    <div class="app-container">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"
+                />
+              </svg>
+            </div>
+            <span>Mercado Pro</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <div class="nav-section-title">Principal</div>
+            <ul>
+              <li class="nav-item">
+                <a href="../dashboard/" class="nav-link" data-tooltip="Início">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                  </svg>
+                  <span class="nav-text">Início</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="../analise/"
+                  class="nav-link active"
+                  data-tooltip="Análise"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
+                    />
+                  </svg>
+                  <span class="nav-text">Análise</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Gerenciamento</div>
+            <ul>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-produtos')"
+                  data-tooltip="Produtos"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"
+                    />
+                  </svg>
+                  <span class="nav-text">Produtos</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-produtos">
+                  <li class="submenu-item">
+                    <a href="../produtos/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Lista de Produtos</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../adicionar-produto/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Adicionar Produto</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../categorias/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Categorias</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../etiqueta-gondola/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Etiqueta de Gôndola</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../estoque/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Controle de Estoque</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-vendas')"
+                  data-tooltip="Vendas"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
+                    />
+                  </svg>
+                  <span class="nav-text">Vendas</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-vendas">
+                  <li class="submenu-item">
+                    <a href="../pdv/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>PDV (Caixa)</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../vendas/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Histórico de Vendas</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../relatorios/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Relatórios</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-financeiro')"
+                  data-tooltip="Financeiro"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"
+                    />
+                  </svg>
+                  <span class="nav-text">Financeiro</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-financeiro">
+                  <li class="submenu-item">
+                    <a href="../caixa/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Controle de Caixa</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../contas/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Contas a Pagar/Receber</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../fluxo-caixa/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Fluxo de Caixa</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-clientes')"
+                  data-tooltip="Clientes"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+                    />
+                  </svg>
+                  <span class="nav-text">Clientes</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-clientes">
+                  <li class="submenu-item">
+                    <a href="../clientes/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Lista de Clientes</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../adicionar-cliente/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Cadastrar Cliente</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-fornecedores')"
+                  data-tooltip="Fornecedores"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"
+                    />
+                  </svg>
+                  <span class="nav-text">Fornecedores</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-fornecedores">
+                  <li class="submenu-item">
+                    <a href="../fornecedores/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Lista de Fornecedores</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../pedidos-compra/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Pedidos de Compra</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Sistema</div>
+            <ul>
+              <li class="nav-item">
+                <a href="../configuracoes/" class="nav-link" data-tooltip="Configurações">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
+                    />
+                  </svg>
+                  <span class="nav-text">Configurações</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="#" class="nav-link" data-tooltip="Ajuda">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+                    />
+                  </svg>
+                  <span class="nav-text">Ajuda</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-profile">
+            <div class="user-avatar">A</div>
+            <div class="user-info">
+              <span class="user-name">Administrador</span>
+              <span class="user-role">Gerente</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 10l5 5 5-5z" />
+            </svg>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content" id="mainContent">
+        <header class="header">
+          <div class="header-left">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+              </svg>
+            </button>
+            <h1 class="header-title">Análise</h1>
+          </div>
+        </header>
+
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-breadcrumb">
+              <a href="../dashboard/" class="breadcrumb-link">Início</a>
+              <span>/</span>
+              <span>Análise</span>
+            </div>
+            <p class="page-subtitle">
+              Acompanhe métricas do negócio, desempenho geral e movimentos mais
+              relevantes do mercado.
+            </p>
+          </div>
+
+          <div class="dashboard-toolbar">
+            <div>
+              <h2>Visão geral do negócio</h2>
+              <p>Desempenho comercial e pontos de atenção da operação.</p>
+            </div>
+            <div class="toolbar-actions">
+              <select
+                class="period-select"
+                id="periodSelect"
+                aria-label="Período da análise"
+              >
+                <option value="7">Últimos 7 dias</option>
+                <option value="30" selected>Últimos 30 dias</option>
+                <option value="90">Últimos 90 dias</option>
+              </select>
+              <button class="export-button" id="exportButton" type="button">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" />
+                </svg>
+                Exportar
+              </button>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card">
+              <div class="stat-label">Faturamento</div>
+              <div class="stat-value" id="revenueValue">R$ 84.680</div>
+              <div class="stat-meta">↑ 12,8% vs. período anterior</div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-label">Vendas realizadas</div>
+              <div class="stat-value" id="salesValue">1.284</div>
+              <div class="stat-meta">↑ 8,4% vs. período anterior</div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-label">Ticket médio</div>
+              <div class="stat-value" id="ticketValue">R$ 65,95</div>
+              <div class="stat-meta">↑ 4,1% vs. período anterior</div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-label">Margem bruta</div>
+              <div class="stat-value" id="marginValue">28,6%</div>
+              <div class="stat-meta neutral">Meta mensal: 30%</div>
+            </article>
+          </div>
+
+          <div class="analysis-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Faturamento ao longo do período</div>
+                  <div class="panel-caption">
+                    Receita bruta por dia, em reais
+                  </div>
+                </div>
+                <span class="simulated-badge">Dados simulados</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas
+                  id="salesChart"
+                  aria-label="Gráfico de faturamento por dia"
+                ></canvas>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Vendas por categoria</div>
+                  <div class="panel-caption">Participação no faturamento</div>
+                </div>
+              </div>
+              <div class="category-list" id="categoryList"></div>
+            </section>
+          </div>
+
+          <div class="bottom-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Produtos mais vendidos</div>
+                  <div class="panel-caption">
+                    Itens com maior saída no período
+                  </div>
+                </div>
+                <a class="panel-link" href="../produtos/">Ver produtos</a>
+              </div>
+              <div class="product-list" id="productList"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Atenção necessária</div>
+                  <div class="panel-caption">Indicadores para agir hoje</div>
+                </div>
+                <a class="panel-link" href="../estoque/">Estoque</a>
+              </div>
+              <div class="alert-list">
+                <div class="alert-item critical">
+                  <span class="alert-icon">!</span>
+                  <div>
+                    <div class="alert-name">Arroz Tipo 1 5kg</div>
+                    <div class="alert-detail">2 unidades em estoque</div>
+                  </div>
+                </div>
+                <div class="alert-item">
+                  <span class="alert-icon">!</span>
+                  <div>
+                    <div class="alert-name">Leite Integral 1L</div>
+                    <div class="alert-detail">Estoque abaixo do mínimo</div>
+                  </div>
+                </div>
+                <div class="alert-item">
+                  <span class="alert-icon">!</span>
+                  <div>
+                    <div class="alert-name">Óleo de Soja 900ml</div>
+                    <div class="alert-detail">Validade em 18 dias</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    
+    
+      <script src="app.js"></script>
+      <script src="../sidebar.js"></script>
+</body>
+</html>

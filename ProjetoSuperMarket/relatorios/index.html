@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Relatórios de Vendas - Mercado Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M12 2 2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-8-5z"
+                />
+              </svg>
+            </div>
+            <span>Mercado Pro</span>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <div class="nav-section-title">Principal</div>
+            <ul>
+              <li class="nav-item">
+                <a href="../dashboard/" class="nav-link"
+                  ><svg class="nav-icon" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg
+                  ><span class="nav-text">Início</span></a
+                >
+              </li>
+              <li class="nav-item">
+                <a href="../analise/" class="nav-link"
+                  ><svg class="nav-icon" viewBox="0 0 24 24">
+                    <path
+                      d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
+                    /></svg
+                  ><span class="nav-text">Análise</span></a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="nav-section">
+            <div class="nav-section-title">Gerenciamento</div>
+            <ul>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link active expanded"
+                  onclick="toggleSubmenu(event, 'submenu-vendas')"
+                  ><svg class="nav-icon" viewBox="0 0 24 24">
+                    <path
+                      d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42l.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1z"
+                    /></svg
+                  ><span class="nav-text">Vendas</span
+                  ><svg class="nav-arrow" viewBox="0 0 24 24">
+                    <path d="m7 10 5 5 5-5z" /></svg
+                ></a>
+                <ul class="submenu open" id="submenu-vendas">
+                  <li>
+                    <a class="submenu-link" href="../pdv/"
+                      ><span class="submenu-dot"></span>PDV (Caixa)</a
+                    >
+                  </li>
+                  <li>
+                    <a class="submenu-link" href="../vendas/"
+                      ><span class="submenu-dot"></span>Histórico de Vendas</a
+                    >
+                  </li>
+                  <li>
+                    <a class="submenu-link active" href="../relatorios/"
+                      ><span class="submenu-dot"></span>Relatórios</a
+                    >
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-section">
+            <div class="nav-section-title">Sistema</div>
+            <ul>
+              <li class="nav-item">
+                <a href="../configuracoes/" class="nav-link"
+                  ><svg class="nav-icon" viewBox="0 0 24 24">
+                    <path
+                      d="M19.14 12.94c.04-.3.06-.61-.01-.94l2.03-1.58-1.92-3.32-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.87 4h-3.84l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96-1.92 3.32 2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58 1.92 3.32 2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54h3.84l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96 1.92-3.32-2.01-1.58zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z"
+                    /></svg
+                  ><span class="nav-text">Configurações</span></a
+                >
+              </li>
+            </ul>
+          </div>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="user-profile">
+            <div class="user-avatar">A</div>
+            <div class="user-info">
+              <span class="user-name">Administrador</span
+              ><span class="user-role">Gerente</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <div class="mobile-overlay" id="overlay"></div>
+      <main class="main" id="main">
+        <header class="header">
+          <div class="header-left">
+            <button
+              class="menu-toggle"
+              onclick="toggleSidebar()"
+              aria-label="Abrir menu"
+            >
+              <svg viewBox="0 0 24 24">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+              </svg>
+            </button>
+            <h1 class="header-title">Relatórios de Vendas</h1>
+          </div>
+        </header>
+        <section class="page-content">
+          <div class="breadcrumb">
+            <a href="../dashboard/">Início</a><span>/</span
+            ><a href="../pdv/">Vendas</a><span>/</span><span>Relatórios</span>
+          </div>
+          <div class="intro">
+            <h2>Relatórios de vendas</h2>
+            <p>
+              Transforme os dados da operação em decisões mais rápidas para o
+              negócio.
+            </p>
+          </div>
+          <div class="toolbar">
+            <div class="field">
+              <label for="period">Período do relatório</label
+              ><select id="period">
+                <option>Últimos 7 dias</option>
+                <option selected>Últimos 30 dias</option>
+                <option>Este trimestre</option>
+                <option>Este ano</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="store">Unidade</label
+              ><select id="store">
+                <option>Todas as unidades</option>
+                <option>Loja principal</option>
+                <option>Loja 02</option>
+              </select>
+            </div>
+            <button class="button" onclick="updateReport()">
+              Atualizar relatório</button
+            ><button class="button secondary" onclick="window.print()">
+              Exportar PDF
+            </button>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-label">Faturamento bruto</div>
+              <div class="stat-value">R$ 36.480,90</div>
+              <div class="stat-meta">+14,8% no período</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Total de pedidos</div>
+              <div class="stat-value">214</div>
+              <div class="stat-meta">+9,4% no período</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Ticket médio</div>
+              <div class="stat-value">R$ 170,47</div>
+              <div class="stat-meta">+5,1% no período</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Margem estimada</div>
+              <div class="stat-value">28,6%</div>
+              <div class="stat-meta down">-1,2% no período</div>
+            </div>
+          </div>
+          <div class="dashboard">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">Evolução do faturamento</div>
+                  <div class="panel-caption">
+                    Comparativo das vendas nos últimos 7 dias
+                  </div>
+                </div>
+                <div class="legend">
+                  <span><i></i>Atual</span
+                  ><span><i class="purple"></i>Anterior</span>
+                </div>
+              </div>
+              <div class="chart">
+                <div class="chart-day">
+                  <div class="bar" style="height: 48%"></div>
+                  <div class="bar alt" style="height: 35%"></div>
+                  <span class="chart-label">Seg</span>
+                </div>
+                <div class="chart-day">
+                  <div class="bar" style="height: 66%"></div>
+                  <div class="bar alt" style="height: 49%"></div>
+                  <span class="chart-label">Ter</span>
+                </div>
+                <div class="chart-day">
+                  <div class="bar" style="height: 57%"></div>
+                  <div class="bar alt" style="height: 63%"></div>
+                  <span class="chart-label">Qua</span>
+                </div>
+                <div class="chart-day">
+                  <div class="bar" style="height: 83%"></div>
+                  <div class="bar alt" style="height: 58%"></div>
+                  <span class="chart-label">Qui</span>
+                </div>
+                <div class="chart-day">
+                  <div class="bar" style="height: 70%"></div>
+                  <div class="bar alt" style="height: 67%"></div>
+                  <span class="chart-label">Sex</span>
+                </div>
+                <div class="chart-day">
+                  <div class="bar" style="height: 92%"></div>
+                  <div class="bar alt" style="height: 73%"></div>
+                  <span class="chart-label">Sáb</span>
+                </div>
+                <div class="chart-day">
+                  <div class="bar" style="height: 61%"></div>
+                  <div class="bar alt" style="height: 45%"></div>
+                  <span class="chart-label">Dom</span>
+                </div>
+              </div>
+              <div class="chart-axis">
+                <span>R$ 0</span><span>R$ 2 mil</span><span>R$ 4 mil</span
+                ><span>R$ 6 mil</span>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">Formas de pagamento</div>
+                  <div class="panel-caption">Participação no faturamento</div>
+                </div>
+              </div>
+              <div class="payment-list">
+                <div class="payment-row">
+                  <div class="payment-label">
+                    <span>Pix</span><strong>42% · R$ 15.321</strong>
+                  </div>
+                  <div class="track">
+                    <div class="fill" style="width: 42%"></div>
+                  </div>
+                </div>
+                <div class="payment-row">
+                  <div class="payment-label">
+                    <span>Cartão de crédito</span
+                    ><strong>31% · R$ 11.309</strong>
+                  </div>
+                  <div class="track">
+                    <div class="fill blue" style="width: 31%"></div>
+                  </div>
+                </div>
+                <div class="payment-row">
+                  <div class="payment-label">
+                    <span>Cartão de débito</span><strong>18% · R$ 6.566</strong>
+                  </div>
+                  <div class="track">
+                    <div class="fill purple" style="width: 18%"></div>
+                  </div>
+                </div>
+                <div class="payment-row">
+                  <div class="payment-label">
+                    <span>Dinheiro</span><strong>9% · R$ 3.284</strong>
+                  </div>
+                  <div class="track">
+                    <div class="fill orange" style="width: 9%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">Produtos mais vendidos</div>
+                  <div class="panel-caption">
+                    Ranking por quantidade de itens vendidos
+                  </div>
+                </div>
+              </div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Categoria</th>
+                    <th>Qtd.</th>
+                    <th>Faturamento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <span class="rank">1</span
+                      ><strong>Arroz Tipo 1 5kg</strong>
+                    </td>
+                    <td>Mercearia</td>
+                    <td>184</td>
+                    <td><strong>R$ 4.968,00</strong></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="rank">2</span
+                      ><strong>Leite Integral 1L</strong>
+                    </td>
+                    <td>Laticínios</td>
+                    <td>172</td>
+                    <td><strong>R$ 1.032,00</strong></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="rank">3</span
+                      ><strong>Café Torrado 500g</strong>
+                    </td>
+                    <td>Mercearia</td>
+                    <td>136</td>
+                    <td><strong>R$ 2.720,00</strong></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="rank">4</span
+                      ><strong>Refrigerante 2L</strong>
+                    </td>
+                    <td>Bebidas</td>
+                    <td>118</td>
+                    <td><strong>R$ 1.888,00</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">Insights da operação</div>
+                  <div class="panel-caption">Pontos que merecem atenção</div>
+                </div>
+              </div>
+              <div class="insight">
+                <div>
+                  <strong>Melhor dia de vendas</strong>
+                  <p>Sábado representa 22% do faturamento do período.</p>
+                </div>
+              </div>
+              <div class="insight">
+                <div>
+                  <strong>Categoria em alta</strong>
+                  <p>Bebidas cresceu 18,4% contra o período anterior.</p>
+                </div>
+              </div>
+              <div class="insight warn">
+                <div>
+                  <strong>Oportunidade</strong>
+                  <p>
+                    O ticket médio cai 11% aos domingos. Avalie uma ação
+                    promocional.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    
+      <script src="app.js"></script>
+      <script src="../sidebar.js"></script>
+</body>
+</html>

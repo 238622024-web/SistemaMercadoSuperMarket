@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fornecedores - Mercado Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2 2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-8-5z"
+              />
+            </svg>
+          </div>
+          <span>Mercado Pro</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Principal</div>
+          <ul>
+            <li class="nav-item">
+              <a href="../dashboard/" class="nav-link"
+                ><svg class="nav-icon" viewBox="0 0 24 24">
+                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg
+                ><span class="nav-text">Início</span></a
+              >
+            </li>
+            <li class="nav-item">
+              <a href="../analise/" class="nav-link"
+                ><svg class="nav-icon" viewBox="0 0 24 24">
+                  <path
+                    d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
+                  /></svg
+                ><span class="nav-text">Análise</span></a
+              >
+            </li>
+          </ul>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Gerenciamento</div>
+          <ul>
+            <li class="nav-item">
+              <a
+                href="#"
+                class="nav-link active expanded"
+                onclick="toggleSubmenu(event, 'submenu-fornecedores')"
+                ><svg class="nav-icon" viewBox="0 0 24 24">
+                  <path
+                    d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11A2.99 2.99 0 1 0 14 5c0 .24.04.47.09.7L7.04 9.81A2.99 2.99 0 1 0 8 12c0-.24-.04-.47-.09-.7l7.05 4.11c-.05.21-.08.43-.08.65A2.92 2.92 0 1 0 18 16.08z"
+                  /></svg
+                ><span class="nav-text">Fornecedores</span
+                ><svg class="nav-arrow" viewBox="0 0 24 24">
+                  <path d="m7 10 5 5 5-5z" /></svg
+              ></a>
+              <ul class="submenu open" id="submenu-fornecedores">
+                <li>
+                  <a class="submenu-link active" href="../fornecedores/"
+                    ><span class="submenu-dot"></span>Lista de Fornecedores</a
+                  >
+                </li>
+                <li>
+                  <a class="submenu-link" href="../pedidos-compra/"
+                    ><span class="submenu-dot"></span>Pedidos de Compra</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a href="../produtos/" class="nav-link"
+                ><svg class="nav-icon" viewBox="0 0 24 24">
+                  <path
+                    d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35L12 4l-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z"
+                  /></svg
+                ><span class="nav-text">Produtos</span></a
+              >
+            </li>
+          </ul>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Sistema</div>
+          <ul>
+            <li class="nav-item">
+              <a href="../configuracoes/" class="nav-link"
+                ><span class="nav-text">Configurações</span></a
+              >
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">A</div>
+          <div class="user-info">
+            <span class="user-name">Administrador</span
+            ><span class="user-role">Gerente</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="mobile-overlay" id="overlay"></div>
+    <main class="main" id="main">
+      <header class="header">
+        <div class="header-left">
+          <button
+            class="menu-toggle"
+            onclick="toggleSidebar()"
+            aria-label="Abrir menu"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+          </button>
+          <h1 class="header-title">Fornecedores</h1>
+        </div>
+      </header>
+      <section class="page-content">
+        <div class="breadcrumb">
+          <a href="../dashboard/">Início</a><span>/</span
+          ><span>Fornecedores</span><span>/</span><span>Lista</span>
+        </div>
+        <div class="intro">
+          <h2>Lista de fornecedores</h2>
+          <p>
+            Centralize contatos, categorias e condições comerciais dos seus
+            parceiros.
+          </p>
+        </div>
+        <div class="toolbar">
+          <div class="field">
+            <label for="search">Buscar fornecedor</label
+            ><input
+              id="search"
+              type="search"
+              placeholder="Nome, CNPJ ou contato"
+            />
+          </div>
+          <div class="field">
+            <label for="category">Categoria</label
+            ><select id="category">
+              <option value="">Todas as categorias</option>
+              <option>Mercearia</option>
+              <option>Bebidas</option>
+              <option>Hortifruti</option>
+              <option>Limpeza</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="status">Status</label
+            ><select id="status">
+              <option value="">Todos</option>
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
+          <button class="button" onclick="filterSuppliers()">Filtrar</button
+          ><button
+            class="button secondary"
+            onclick="alert('Formulário de novo fornecedor')"
+          >
+            + Novo fornecedor
+          </button>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Fornecedores cadastrados</div>
+            <div class="stat-value" id="supplierCount">24</div>
+            <div class="stat-meta">+3 neste mês</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Fornecedores ativos</div>
+            <div class="stat-value">21</div>
+            <div class="stat-meta">87,5% da base</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Pedidos em aberto</div>
+            <div class="stat-value">8</div>
+            <div class="stat-meta">R$ 18.420,00</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Vencimentos próximos</div>
+            <div class="stat-value">4</div>
+            <div class="stat-meta">Nos próximos 7 dias</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Fornecedores cadastrados</div>
+              <div class="panel-caption">24 parceiros encontrados na base</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fornecedor</th>
+                  <th>Categoria</th>
+                  <th>Contato</th>
+                  <th>Prazo médio</th>
+                  <th>Último pedido</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="supplierTable">
+                <tr>
+                  <td>
+                    <strong>Distribuidora Nova Era</strong><br /><small
+                      >CNPJ 12.345.678/0001-90</small
+                    >
+                  </td>
+                  <td>Mercearia</td>
+                  <td class="contact">
+                    <span>Rafael Mendes</span><small>(11) 99845-2201</small>
+                  </td>
+                  <td>7 dias</td>
+                  <td>18/09/2026</td>
+                  <td><span class="status">Ativo</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showSupplier('Distribuidora Nova Era')"
+                      aria-label="Ver fornecedor"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Bebidas Brasil Ltda.</strong><br /><small
+                      >CNPJ 27.890.123/0001-44</small
+                    >
+                  </td>
+                  <td>Bebidas</td>
+                  <td class="contact">
+                    <span>Camila Torres</span><small>(11) 98732-4410</small>
+                  </td>
+                  <td>14 dias</td>
+                  <td>16/09/2026</td>
+                  <td><span class="status">Ativo</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showSupplier('Bebidas Brasil Ltda.')"
+                      aria-label="Ver fornecedor"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>HortiMais Distribuição</strong><br /><small
+                      >CNPJ 44.567.890/0001-12</small
+                    >
+                  </td>
+                  <td>Hortifruti</td>
+                  <td class="contact">
+                    <span>Juliana Alves</span><small>(11) 97654-8102</small>
+                  </td>
+                  <td>3 dias</td>
+                  <td>20/09/2026</td>
+                  <td><span class="status">Ativo</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showSupplier('HortiMais Distribuição')"
+                      aria-label="Ver fornecedor"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Casa da Limpeza</strong><br /><small
+                      >CNPJ 39.123.456/0001-77</small
+                    >
+                  </td>
+                  <td>Limpeza</td>
+                  <td class="contact">
+                    <span>Marcos Lima</span><small>(11) 96543-2210</small>
+                  </td>
+                  <td>21 dias</td>
+                  <td>02/08/2026</td>
+                  <td><span class="status inactive">Inativo</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showSupplier('Casa da Limpeza')"
+                      aria-label="Ver fornecedor"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="empty" id="empty">
+              Nenhum fornecedor encontrado com os filtros informados.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+      <script src="app.js"></script>
+      <script src="../sidebar.js"></script>
+</body>
+  
+</html>

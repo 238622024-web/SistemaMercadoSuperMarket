@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastrar Cliente - Mercado Pro</title>
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" id="sidebar">
+        <div class="logo">
+          <div class="logo-mark">M</div>
+          <span>Mercado Pro</span>
+        </div>
+        <div class="section-title">Principal</div>
+        <a class="nav-link" href="../dashboard/"
+          ><svg viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg
+          ><span>Início</span></a
+        ><a class="nav-link" href="../analise/"
+          ><svg viewBox="0 0 24 24">
+            <path
+              d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
+            /></svg
+          ><span>Análise</span></a
+        >
+        <div class="section-title">Gerenciamento</div>
+        <a class="nav-link" href="../produtos/"><span>Produtos</span></a
+        ><a class="nav-link" href="../pdv/"><span>Vendas</span></a
+        ><a class="nav-link" href="../caixa/"><span>Financeiro</span></a>
+        <a class="nav-link active" href="../clientes/"
+          ><svg viewBox="0 0 24 24">
+            <path
+              d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"
+            /></svg
+          ><span>Clientes</span></a
+        >
+        <div class="submenu">
+          <a class="submenu-link" href="../clientes/"
+            ><span class="dot"></span>Lista de Clientes</a
+          ><a class="submenu-link active" href="../adicionar-cliente/"
+            ><span class="dot"></span>Cadastrar Cliente</a
+          >
+        </div>
+        <a class="nav-link" href="../fornecedores/"
+          ><span>Fornecedores</span></a
+        >
+        <div class="section-title">Sistema</div>
+        <a class="nav-link" href="../configuracoes/">Configurações</a
+        ><a class="nav-link" href="#">Ajuda</a>
+      </aside>
+      <main class="main">
+        <header>
+          <button class="menu" id="menu" aria-label="Abrir menu">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+          </button>
+          <h1>Cadastrar Cliente</h1>
+        </header>
+        <section class="content">
+          <div class="breadcrumb">
+            Gerenciamento / Clientes /
+            <strong style="color: #667eea">Cadastrar Cliente</strong>
+          </div>
+          <p class="subtitle">
+            Preencha os dados para cadastrar um novo cliente.
+          </p>
+          <div class="card">
+            <h2>Dados do cliente</h2>
+            <form id="clientForm">
+              <div class="form-grid">
+                <div class="field full">
+                  <label for="name">Nome completo *</label
+                  ><input
+                    id="name"
+                    required
+                    placeholder="Digite o nome do cliente"
+                  />
+                </div>
+                <div class="field">
+                  <label for="document">CPF/CNPJ</label
+                  ><input id="document" placeholder="000.000.000-00" />
+                </div>
+                <div class="field">
+                  <label for="phone">Telefone</label
+                  ><input id="phone" placeholder="(00) 00000-0000" />
+                </div>
+                <div class="field">
+                  <label for="email">E-mail</label
+                  ><input
+                    id="email"
+                    type="email"
+                    placeholder="cliente@email.com"
+                  />
+                </div>
+                <div class="field">
+                  <label for="status">Status</label
+                  ><select id="status">
+                    <option>Ativo</option>
+                    <option>Inativo</option>
+                  </select>
+                </div>
+                <div class="field full">
+                  <label for="address">Endereço</label
+                  ><input
+                    id="address"
+                    placeholder="Rua, número, bairro e cidade"
+                  />
+                </div>
+              </div>
+              <div class="actions">
+                <a class="button cancel" href="../clientes/">Cancelar</a
+                ><button class="primary" type="submit">Salvar cliente</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+    
+      <script src="app.js"></script>
+      <script src="../sidebar.js"></script>
+</body>
+</html>
