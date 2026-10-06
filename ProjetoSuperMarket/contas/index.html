@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contas a Pagar e Receber - Mercado Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2 2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-8-5z"
+              />
+            </svg>
+          </div>
+          <span>Mercado Pro</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Principal</div>
+        <a class="nav-link" href="../dashboard/"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg
+          ><span class="nav-text">Início</span></a
+        ><a class="nav-link" href="../analise/"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path
+              d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
+            /></svg
+          ><span class="nav-text">Análise</span></a
+        >
+        <div class="nav-section-title">Gerenciamento</div>
+        <a class="nav-link" href="#" onclick="menuToggle(event, 'sales')"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path
+              d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42l.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48-.55-.55-1-1-1-1H5.21l-.94-2H1z"
+            /></svg
+          ><span class="nav-text">Vendas</span
+          ><svg class="nav-arrow" viewBox="0 0 24 24">
+            <path d="m7 10 5 5 5-5z" /></svg
+        ></a>
+        <div class="submenu" id="sales">
+          <a class="submenu-link" href="../pdv/"
+            ><span class="dot"></span>PDV (Caixa)</a
+          ><a class="submenu-link" href="../vendas/"
+            ><span class="dot"></span>Histórico de Vendas</a
+          ><a class="submenu-link" href="../relatorios/"
+            ><span class="dot"></span>Relatórios</a
+          >
+        </div>
+        <a
+          class="nav-link active expanded"
+          href="#"
+          onclick="menuToggle(event, 'finance')"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path
+              d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55-2.43-3.81-4.7-4.4z"
+            /></svg
+          ><span class="nav-text">Financeiro</span
+          ><svg class="nav-arrow" viewBox="0 0 24 24">
+            <path d="m7 10 5 5 5-5z" /></svg
+        ></a>
+        <div class="submenu open" id="finance">
+          <a class="submenu-link" href="../caixa/"
+            ><span class="dot"></span>Controle de Caixa</a
+          ><a class="submenu-link active" href="../contas/"
+            ><span class="dot"></span>Contas a Pagar/Receber</a
+          ><a class="submenu-link" href="../fluxo-caixa/"
+            ><span class="dot"></span>Fluxo de Caixa</a
+          >
+        </div>
+        <div class="nav-section-title">Sistema</div>
+        <a class="nav-link" href="../configuracoes/"
+          ><span class="nav-text">Configurações</span></a
+        >
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="avatar">A</div>
+          <div class="user-info">
+            <span class="user-name">Administrador</span
+            ><span class="user-role">Gerente</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="overlay" id="overlay"></div>
+    <main class="main" id="main">
+      <header class="header">
+        <div class="header-left">
+          <button
+            class="menu"
+            onclick="toggleSidebar()"
+            aria-label="Abrir menu"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+          </button>
+          <h1>Contas a Pagar/Receber</h1>
+        </div>
+      </header>
+      <section class="content">
+        <div class="crumb">
+          <a href="../dashboard/">Início</a><span>/</span
+          ><span>Financeiro</span><span>/</span><span>Contas</span>
+        </div>
+        <div class="intro">
+          <h2>Contas a pagar e receber</h2>
+          <p>
+            Organize compromissos financeiros, vencimentos e recebimentos da
+            operação.
+          </p>
+        </div>
+        <div class="toolbar">
+          <div class="field">
+            <label for="search">Buscar conta</label
+            ><input
+              id="search"
+              type="search"
+              placeholder="Descrição ou fornecedor"
+            />
+          </div>
+          <div class="field">
+            <label for="period">Período</label
+            ><select id="period">
+              <option>Próximos 7 dias</option>
+              <option selected>Este mês</option>
+              <option>Próximo mês</option>
+            </select>
+          </div>
+          <button class="button" onclick="filterAccounts()">Filtrar</button
+          ><button
+            class="button secondary"
+            onclick="alert('Novo lançamento financeiro')"
+          >
+            + Nova conta
+          </button>
+        </div>
+        <div class="tabs">
+          <button class="tab active" onclick="setTab(this, 'all')">Todas</button
+          ><button class="tab" onclick="setTab(this, 'payable')">A pagar</button
+          ><button class="tab" onclick="setTab(this, 'receivable')">
+            A receber
+          </button>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Total a pagar</div>
+            <div class="value">R$ 12.840</div>
+            <div class="meta red">9 contas em aberto</div>
+          </div>
+          <div class="stat">
+            <div class="label">Total a receber</div>
+            <div class="value">R$ 8.460</div>
+            <div class="meta">6 recebimentos previstos</div>
+          </div>
+          <div class="stat">
+            <div class="label">Vencidas</div>
+            <div class="value">R$ 1.280</div>
+            <div class="meta red">2 contas em atraso</div>
+          </div>
+          <div class="stat">
+            <div class="label">Saldo projetado</div>
+            <div class="value">R$ 4.340</div>
+            <div class="meta">Após compromissos</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Contas cadastradas</h3>
+              <div class="caption">15 lançamentos no período selecionado</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Descrição</th>
+                  <th>Tipo</th>
+                  <th>Vencimento</th>
+                  <th>Categoria</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="accountTable">
+                <tr data-type="payable">
+                  <td>
+                    <strong>Pedido PC-00218</strong><br /><small
+                      >Distribuidora Nova Era</small
+                    >
+                  </td>
+                  <td class="type">A pagar</td>
+                  <td>27/09/2026</td>
+                  <td>Estoque</td>
+                  <td class="expense">R$ 4.860,00</td>
+                  <td><span class="status pending">Pendente</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showAccount('Pedido PC-00218')"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr data-type="receivable">
+                  <td>
+                    <strong>Recebimento cliente #RC-042</strong><br /><small
+                      >Venda faturada</small
+                    >
+                  </td>
+                  <td class="type">A receber</td>
+                  <td>24/09/2026</td>
+                  <td>Vendas</td>
+                  <td class="income">R$ 2.340,50</td>
+                  <td><span class="status paid">Previsto</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showAccount('Recebimento cliente #RC-042')"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr data-type="payable">
+                  <td>
+                    <strong>Energia elétrica</strong><br /><small
+                      >Concessionária local</small
+                    >
+                  </td>
+                  <td class="type">A pagar</td>
+                  <td>20/09/2026</td>
+                  <td>Operacional</td>
+                  <td class="expense">R$ 1.280,00</td>
+                  <td><span class="status overdue">Vencida</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showAccount('Energia elétrica')"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr data-type="payable">
+                  <td>
+                    <strong>Aluguel da loja</strong><br /><small
+                      >Imobiliária Central</small
+                    >
+                  </td>
+                  <td class="type">A pagar</td>
+                  <td>10/10/2026</td>
+                  <td>Operacional</td>
+                  <td class="expense">R$ 6.700,00</td>
+                  <td><span class="status pending">Pendente</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showAccount('Aluguel da loja')"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr data-type="receivable">
+                  <td>
+                    <strong>Venda corporativa #V-1038</strong><br /><small
+                      >Mercado Bom Preço</small
+                    >
+                  </td>
+                  <td class="type">A receber</td>
+                  <td>30/09/2026</td>
+                  <td>Vendas</td>
+                  <td class="income">R$ 4.850,00</td>
+                  <td><span class="status paid">Previsto</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showAccount('Venda corporativa #V-1038')"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+      <script src="app.js"></script>
+      <script src="../sidebar.js"></script>
+</body>
+</html>

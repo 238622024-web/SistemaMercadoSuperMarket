@@ -1,0 +1,84 @@
+
+      const loginForm = document.querySelector("#loginForm");
+      const mensagem = document.querySelector("#mensagem");
+      const submitBtn = document.querySelector("#submitBtn");
+      const togglePassword = document.querySelector("#togglePassword");
+      const senhaInput = document.querySelector("#senha");
+      const emailInput = document.querySelector("#email");
+
+      // Toggle de visibilidade da senha
+      togglePassword.addEventListener("click", () => {
+        const type =
+          senhaInput.getAttribute("type") === "password" ? "text" : "password";
+        senhaInput.setAttribute("type", type);
+
+        const eyeIcon = document.querySelector("#eyeIcon");
+        if (type === "text") {
+          eyeIcon.innerHTML =
+            '<path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>';
+        } else {
+          eyeIcon.innerHTML =
+            '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+        }
+      });
+
+      // Validação e submissão do formulário
+      loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        // Limpar mensagens anteriores
+        mensagem.classList.remove("show", "success", "error");
+
+        // Validação de e-mail
+        if (
+          !emailInput.value.includes("@") ||
+          !emailInput.value.includes(".")
+        ) {
+          showMessage("Por favor, insira um e-mail válido.", "error");
+          emailInput.focus();
+          return;
+        }
+
+        // Validação de senha
+        if (senhaInput.value.length < 6) {
+          showMessage("A senha deve ter no mínimo 6 caracteres.", "error");
+          senhaInput.focus();
+          return;
+        }
+
+        // Simular login
+        submitBtn.textContent = "Entrando...";
+        submitBtn.disabled = true;
+
+        setTimeout(() => {
+          showMessage(
+            "Login realizado com sucesso! Redirecionando...",
+            "success",
+          );
+          submitBtn.textContent = "Entrar";
+          submitBtn.disabled = false;
+
+          // Aqui você pode adicionar o redirecionamento
+          // window.location.href = '/dashboard';
+        }, 1500);
+      });
+
+      function showMessage(text, type) {
+        mensagem.textContent = text;
+        mensagem.classList.add("show", type);
+
+        // Auto-ocultar após 5 segundos
+        setTimeout(() => {
+          mensagem.classList.remove("show");
+        }, 5000);
+      }
+
+      // Remover mensagem ao começar a digitar
+      [emailInput, senhaInput].forEach((input) => {
+        input.addEventListener("input", () => {
+          if (mensagem.classList.contains("show")) {
+            mensagem.classList.remove("show");
+          }
+        });
+      });
+    

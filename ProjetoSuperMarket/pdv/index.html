@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDV - Ponto de Venda | Mercado Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"
+                />
+              </svg>
+            </div>
+            <span>Mercado Super Market</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <div class="nav-section-title">Principal</div>
+            <ul>
+              <li class="nav-item">
+                <a href="../dashboard/" class="nav-link" data-tooltip="Início">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                  </svg>
+                  <span class="nav-text">Início</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="../analise/" class="nav-link" data-tooltip="Análise">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
+                    />
+                  </svg>
+                  <span class="nav-text">Análise</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Gerenciamento</div>
+            <ul>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-produtos')"
+                  data-tooltip="Produtos"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"
+                    />
+                  </svg>
+                  <span class="nav-text">Produtos</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-produtos">
+                  <li class="submenu-item">
+                    <a href="../produtos/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Lista de Produtos</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../adicionar-produto/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Adicionar Produto</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../categorias/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Categorias</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../etiqueta-gondola/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Etiqueta de Gôndola</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../estoque/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Controle de Estoque</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link active expanded"
+                  onclick="toggleSubmenu(event, 'submenu-vendas')"
+                  data-tooltip="Vendas"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
+                    />
+                  </svg>
+                  <span class="nav-text">Vendas</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu open" id="submenu-vendas">
+                  <li class="submenu-item">
+                    <a href="../pdv/" class="submenu-link active">
+                      <span class="submenu-dot"></span>
+                      <span>PDV (Caixa)</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../vendas/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Histórico de Vendas</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../relatorios/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Relatórios</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-financeiro')"
+                  data-tooltip="Financeiro"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"
+                    />
+                  </svg>
+                  <span class="nav-text">Financeiro</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-financeiro">
+                  <li class="submenu-item">
+                    <a href="../caixa/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Controle de Caixa</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../contas/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Contas a Pagar/Receber</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../fluxo-caixa/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Fluxo de Caixa</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-clientes')"
+                  data-tooltip="Clientes"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+                    />
+                  </svg>
+                  <span class="nav-text">Clientes</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-clientes">
+                  <li class="submenu-item">
+                    <a href="../clientes/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Lista de Clientes</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../adicionar-cliente/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Cadastrar Cliente</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="#"
+                  class="nav-link"
+                  onclick="toggleSubmenu(event, 'submenu-fornecedores')"
+                  data-tooltip="Fornecedores"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"
+                    />
+                  </svg>
+                  <span class="nav-text">Fornecedores</span>
+                  <svg
+                    class="nav-arrow"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </a>
+                <ul class="submenu" id="submenu-fornecedores">
+                  <li class="submenu-item">
+                    <a href="../fornecedores/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Lista de Fornecedores</span>
+                    </a>
+                  </li>
+                  <li class="submenu-item">
+                    <a href="../pedidos-compra/" class="submenu-link">
+                      <span class="submenu-dot"></span>
+                      <span>Pedidos de Compra</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Sistema</div>
+            <ul>
+              <li class="nav-item">
+                <a href="../configuracoes/" class="nav-link" data-tooltip="Configurações">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
+                    />
+                  </svg>
+                  <span class="nav-text">Configurações</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="#" class="nav-link" data-tooltip="Ajuda">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+                    />
+                  </svg>
+                  <span class="nav-text">Ajuda</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-profile">
+            <div class="user-avatar">A</div>
+            <div class="user-info">
+              <span class="user-name">Administrador</span>
+              <span class="user-role">Gerente</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 10l5 5 5-5z" />
+            </svg>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Overlay para mobile -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <div class="pdv-container">
+        <!-- Área de Produtos -->
+        <div class="products-area">
+          <div class="pdv-header">
+            <div class="header-top">
+              <div class="header-left-pdv">
+                <button class="menu-toggle-pdv" onclick="toggleSidebar()">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+                  </svg>
+                </button>
+                <div>
+                  <h1>
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
+                      />
+                    </svg>
+                    PDV - Caixa
+                  </h1>
+                  <div class="header-actions">
+                    <button
+                      class="header-btn"
+                      onclick="window.location.href = '../dashboard/'"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                      </svg>
+                      Dashboard
+                    </button>
+                    <button
+                      class="header-btn"
+                      onclick="alert('Histórico de vendas')"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"
+                        />
+                      </svg>
+                      Histórico
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="header-info">
+                <div class="operator-name">Operador: Administrador</div>
+                <div class="operator-role">Cargo: Gerente</div>
+                <div class="session-time">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"
+                    />
+                  </svg>
+                  <span id="sessionTime">00:00:00</span>
+                </div>
+              </div>
+            </div>
+            <div class="search-bar">
+              <div class="search-input-wrapper">
+                <svg
+                  class="search-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  class="search-input"
+                  id="searchInput"
+                  placeholder="Digite o nome do produto ou código de barras..."
+                  autofocus
+                />
+              </div>
+              <button
+                class="barcode-btn"
+                onclick="
+                  alert(
+                    '🔍 Leitor de código de barras\n\nFuncionalidade em desenvolvimento.\nEm breve você poderá usar um leitor físico!',
+                  )
+                "
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M4 6h2v12H4zm3 0h1v12H7zm2 0h3v12H9zm4 0h1v12h-1zm3 0h1v12h-1zm2 0h3v12h-3z"
+                  />
+                </svg>
+                <span>Código de Barras</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Categorias -->
+          <div class="categories-bar">
+            <div class="categories-scroll">
+              <button class="category-chip active" data-category="all">
+                📦 Todos
+              </button>
+              <button class="category-chip" data-category="alimentos">
+                🌾 Alimentos Básicos
+              </button>
+              <button class="category-chip" data-category="bebidas">
+                🥤 Bebidas
+              </button>
+              <button class="category-chip" data-category="limpeza">
+                🧼 Limpeza
+              </button>
+              <button class="category-chip" data-category="higiene">
+                🧴 Higiene
+              </button>
+              <button class="category-chip" data-category="massas">
+                🍝 Massas
+              </button>
+              <button class="category-chip" data-category="oleos">
+                🫒 Óleos e Temperos
+              </button>
+            </div>
+          </div>
+
+          <div class="products-grid" id="productsGrid">
+            <!-- Produtos serão carregados aqui -->
+          </div>
+        </div>
+
+        <!-- Área do Carrinho -->
+        <div class="cart-area" id="cartArea">
+          <div class="cart-header">
+            <h2>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
+                />
+              </svg>
+              Carrinho
+            </h2>
+            <span class="cart-items-count" id="itemsCount">0 itens</span>
+          </div>
+
+          <div class="cart-items" id="cartItems">
+            <div class="empty-cart">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
+                />
+              </svg>
+              <p>Carrinho vazio</p>
+              <small>Clique nos produtos para adicionar ao carrinho</small>
+            </div>
+          </div>
+
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span class="summary-label">Subtotal:</span>
+              <span class="summary-value" id="subtotal">R$ 0,00</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Desconto:</span>
+              <span class="summary-value" id="discount">R$ 0,00</span>
+            </div>
+            <div class="summary-row total">
+              <span class="summary-label">TOTAL:</span>
+              <span class="summary-value" id="total">R$ 0,00</span>
+            </div>
+
+            <div class="payment-methods">
+              <div class="payment-title">💳 Forma de Pagamento</div>
+              <div class="payment-grid">
+                <button class="payment-btn selected" data-method="money">
+                  💵 Dinheiro
+                </button>
+                <button class="payment-btn" data-method="debit">
+                  💳 Débito
+                </button>
+                <button class="payment-btn" data-method="credit">
+                  💳 Crédito
+                </button>
+                <button class="payment-btn" data-method="pix">📱 PIX</button>
+              </div>
+            </div>
+
+            <button class="finalize-btn" id="finalizeBtn" disabled>
+              Finalizar Venda
+            </button>
+
+            <div class="action-buttons">
+              <button class="action-btn cancel" onclick="clearCart()">
+                🗑️ Limpar
+              </button>
+              <button
+                class="action-btn"
+                onclick="window.location.href = '../dashboard/'"
+              >
+                ◀ Voltar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast de Notificação -->
+      <div class="toast" id="toast">
+        <svg class="toast-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        </svg>
+        <span class="toast-message" id="toastMessage"></span>
+      </div>
+
+      
+    </div>
+
+    
+      <script src="app.js"></script>
+      <script src="../sidebar.js"></script>
+</body>
+</html>

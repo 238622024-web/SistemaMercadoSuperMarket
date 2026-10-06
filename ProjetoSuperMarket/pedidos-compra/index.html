@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pedidos de Compra - Mercado Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2 2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-8-5z"
+              />
+            </svg>
+          </div>
+          <span>Mercado Pro</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Principal</div>
+          <ul>
+            <li class="nav-item">
+              <a href="../dashboard/" class="nav-link"
+                ><svg class="nav-icon" viewBox="0 0 24 24">
+                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg
+                ><span class="nav-text">Início</span></a
+              >
+            </li>
+            <li class="nav-item">
+              <a href="../analise/" class="nav-link"
+                ><svg class="nav-icon" viewBox="0 0 24 24">
+                  <path
+                    d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
+                  /></svg
+                ><span class="nav-text">Análise</span></a
+              >
+            </li>
+          </ul>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Gerenciamento</div>
+          <ul>
+            <li class="nav-item">
+              <a
+                href="#"
+                class="nav-link active expanded"
+                onclick="toggleSubmenu(event, 'submenu-fornecedores')"
+                ><svg class="nav-icon" viewBox="0 0 24 24">
+                  <path
+                    d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46-.09-.7l7.05-4.11A2.99 2.99 0 1 0 14 5c0 .24.04.47.09.7L7.04 9.81A2.99 2.99 0 1 0 8 12c0-.24-.04-.47-.09-.7l7.05 4.11c-.05.21-.08.43-.08.65A2.92 2.92 0 1 0 18 16.08z"
+                  /></svg
+                ><span class="nav-text">Fornecedores</span
+                ><svg class="nav-arrow" viewBox="0 0 24 24">
+                  <path d="m7 10 5 5 5-5z" /></svg
+              ></a>
+              <ul class="submenu open" id="submenu-fornecedores">
+                <li>
+                  <a class="submenu-link" href="../fornecedores/"
+                    ><span class="submenu-dot"></span>Lista de Fornecedores</a
+                  >
+                </li>
+                <li>
+                  <a class="submenu-link active" href="../pedidos-compra/"
+                    ><span class="submenu-dot"></span>Pedidos de Compra</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a href="../produtos/" class="nav-link"
+                ><svg class="nav-icon" viewBox="0 0 24 24">
+                  <path
+                    d="M20 6h-2.18c.11-.31.18-.65.18-1-1.66-3-1.96.54-2.5 1.35L12 4l-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z"
+                  /></svg
+                ><span class="nav-text">Produtos</span></a
+              >
+            </li>
+          </ul>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Sistema</div>
+          <ul>
+            <li class="nav-item">
+              <a href="../configuracoes/" class="nav-link"
+                ><span class="nav-text">Configurações</span></a
+              >
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">A</div>
+          <div class="user-info">
+            <span class="user-name">Administrador</span
+            ><span class="user-role">Gerente</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="mobile-overlay" id="overlay"></div>
+    <main class="main" id="main">
+      <header class="header">
+        <div class="header-left">
+          <button
+            class="menu-toggle"
+            onclick="toggleSidebar()"
+            aria-label="Abrir menu"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+          </button>
+          <h1 class="header-title">Pedidos de Compra</h1>
+        </div>
+      </header>
+      <section class="page-content">
+        <div class="breadcrumb">
+          <a href="../dashboard/">Início</a><span>/</span
+          ><a href="../fornecedores/">Fornecedores</a><span>/</span
+          ><span>Pedidos de compra</span>
+        </div>
+        <div class="intro">
+          <h2>Pedidos de compra</h2>
+          <p>
+            Acompanhe solicitações, aprovações e recebimentos de mercadorias.
+          </p>
+        </div>
+        <div class="toolbar">
+          <div class="field">
+            <label for="search">Buscar pedido</label
+            ><input
+              id="search"
+              type="search"
+              placeholder="Código ou fornecedor"
+            />
+          </div>
+          <div class="field">
+            <label for="status">Status</label
+            ><select id="status">
+              <option value="">Todos os status</option>
+              <option value="Em aberto">Em aberto</option>
+              <option value="Aprovado">Aprovado</option>
+              <option value="Recebido">Recebido</option>
+              <option value="Pendente">Pendente</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="period">Período</label
+            ><select id="period">
+              <option>Últimos 7 dias</option>
+              <option selected>Últimos 30 dias</option>
+              <option>Este mês</option>
+            </select>
+          </div>
+          <button class="button" onclick="filterOrders()">Filtrar</button
+          ><button
+            class="button secondary"
+            onclick="alert('Formulário de novo pedido de compra')"
+          >
+            + Novo pedido
+          </button>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Pedidos no período</div>
+            <div class="stat-value" id="orderCount">18</div>
+            <div class="stat-meta">+4 vs. período anterior</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Em aberto</div>
+            <div class="stat-value">8</div>
+            <div class="stat-meta warn">Aguardando recebimento</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Valor comprometido</div>
+            <div class="stat-value">R$ 18.420</div>
+            <div class="stat-meta">Pedidos em aberto</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Recebidos no mês</div>
+            <div class="stat-value">10</div>
+            <div class="stat-meta">83% no prazo</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Pedidos recentes</div>
+              <div class="panel-caption">
+                18 pedidos encontrados no período selecionado
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pedido</th>
+                  <th>Fornecedor</th>
+                  <th>Emissão</th>
+                  <th>Previsão</th>
+                  <th>Itens</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="orderTable">
+                <tr>
+                  <td><strong>#PC-00218</strong></td>
+                  <td>Distribuidora Nova Era</td>
+                  <td>20/09/2026</td>
+                  <td>27/09/2026</td>
+                  <td>24</td>
+                  <td><strong>R$ 4.860,00</strong></td>
+                  <td><span class="status open">Em aberto</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showOrder('#PC-00218')"
+                      aria-label="Ver pedido"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>#PC-00217</strong></td>
+                  <td>HortiMais Distribuição</td>
+                  <td>20/09/2026</td>
+                  <td>23/09/2026</td>
+                  <td>18</td>
+                  <td><strong>R$ 2.340,50</strong></td>
+                  <td><span class="status approved">Aprovado</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showOrder('#PC-00217')"
+                      aria-label="Ver pedido"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>#PC-00216</strong></td>
+                  <td>Bebidas Brasil Ltda.</td>
+                  <td>18/09/2026</td>
+                  <td>02/10/2026</td>
+                  <td>32</td>
+                  <td><strong>R$ 6.780,00</strong></td>
+                  <td><span class="status pending">Pendente</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showOrder('#PC-00216')"
+                      aria-label="Ver pedido"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>#PC-00215</strong></td>
+                  <td>Casa da Limpeza</td>
+                  <td>15/09/2026</td>
+                  <td>22/09/2026</td>
+                  <td>15</td>
+                  <td><strong>R$ 1.920,00</strong></td>
+                  <td><span class="status received">Recebido</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showOrder('#PC-00215')"
+                      aria-label="Ver pedido"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>#PC-00214</strong></td>
+                  <td>Distribuidora Nova Era</td>
+                  <td>12/09/2026</td>
+                  <td>19/09/2026</td>
+                  <td>28</td>
+                  <td><strong>R$ 5.430,00</strong></td>
+                  <td><span class="status received">Recebido</span></td>
+                  <td>
+                    <button
+                      class="action"
+                      onclick="showOrder('#PC-00214')"
+                      aria-label="Ver pedido"
+                    >
+                      ›
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="empty" id="empty">
+              Nenhum pedido encontrado com os filtros informados.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+      <script src="app.js"></script>
+      <script src="../sidebar.js"></script>
+</body>
+  
+</html>
