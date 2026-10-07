@@ -48,7 +48,7 @@ app.get('*', (req, res) => {
     return res.status(404).json({ error: 'Rota não encontrada' });
   }
 
-  return res.sendFile(path.join(FRONTEND_PATH, 'index.html'));
+  return res.redirect('/index/');
 });
 
 app.listen(PORT, () => {
