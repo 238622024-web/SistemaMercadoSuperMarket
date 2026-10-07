@@ -179,6 +179,16 @@ function toggleSubmenu(event, submenuId) {
 
   const isOpen = submenu.classList.contains("open");
 
+  sidebar.querySelectorAll(".submenu.open").forEach((openSubmenu) => {
+    if (openSubmenu === submenu) return;
+
+    openSubmenu.classList.remove("open");
+
+    const openLink = openSubmenu.previousElementSibling;
+    openLink?.classList.remove("expanded");
+    openLink?.setAttribute("aria-expanded", "false");
+  });
+
   submenu.classList.toggle("open", !isOpen);
 
   link?.classList.toggle("expanded", !isOpen);
