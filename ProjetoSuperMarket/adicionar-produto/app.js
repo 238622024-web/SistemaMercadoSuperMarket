@@ -1,188 +1,338 @@
 
+// ============================================================
+// CADASTRO DE PRODUTOS - SUPERMARKET
+// Integração com a API /api/products
+// ============================================================
 
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
 
-      // Toggle Sidebar
-      function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const mainContent = document.getElementById("mainContent");
+    if (!sidebar || !mainContent) return;
 
-        if (window.innerWidth <= 768) {
-          sidebar.classList.toggle("mobile-visible");
-        } else {
-          sidebar.classList.toggle("collapsed");
-          mainContent.classList.toggle("expanded");
-        }
-      }
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('mobile-visible');
+    } else {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+    }
+}
 
-      // Toggle Submenu
-      function toggleSubmenu(event, submenuId) {
+function toggleSubmenu(event, submenuId) {
+    event.preventDefault();
+
+    const submenu = document.getElementById(submenuId);
+    const link = event.currentTarget;
+
+    if (submenu) submenu.classList.toggle('open');
+    if (link) link.classList.toggle('expanded');
+}
+
+// ============================================================
+// ELEMENTOS DO FORMULÁRIO E IMAGENS
+// ============================================================
+
+const imageUpload = document.getElementById('imageUpload');
+const imagePreview = document.getElementById('imagePreview');
+const productForm = document.getElementById('productForm');
+
+let uploadedImages = [];
+
+if (imageUpload) {
+    imageUpload.addEventListener('dragover', (event) => {
         event.preventDefault();
-        const link = event.currentTarget;
-        const submenu = document.getElementById(submenuId);
+        imageUpload.classList.add('dragover');
+    });
 
-        link.classList.toggle("expanded");
-        submenu.classList.toggle("open");
-      }
+    imageUpload.addEventListener('dragleave', () => {
+        imageUpload.classList.remove('dragover');
+    });
 
-      // Upload de Imagem
-      const imageUpload = document.getElementById("imageUpload");
-      const imagePreview = document.getElementById("imagePreview");
-      let uploadedImages = [];
+    imageUpload.addEventListener('drop', (event) => {
+        event.preventDefault();
+        imageUpload.classList.remove('dragover');
+        handleFiles(event.dataTransfer.files);
+    });
+}
 
-      // Drag and drop
-      imageUpload.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        imageUpload.classList.add("dragover");
-      });
+function handleImageUpload(event) {
+    handleFiles(event.target.files);
+}
 
-      imageUpload.addEventListener("dragleave", () => {
-        imageUpload.classList.remove("dragover");
-      });
+function handleFiles(files) {
+    Array.from(files || []).forEach((file) => {
+        if (!file.type.startsWith('image/')) {
+            showNotification(
+                'Selecione apenas arquivos de imagem.',
+                'error'
+            );
+            return;
+        }
 
-      imageUpload.addEventListener("drop", (e) => {
-        e.preventDefault();
-        imageUpload.classList.remove("dragover");
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification(
+                'Cada imagem deve ter no máximo 5 MB.',
+                'error'
+            );
+            return;
+        }
 
-        const files = e.dataTransfer.files;
-        handleFiles(files);
-      });
+        const reader = new FileReader();
 
-      function handleImageUpload(event) {
-        const files = event.target.files;
-        handleFiles(files);
-      }
+        reader.onload = (event) => {
+            uploadedImages.push(event.target.result);
+            displayImages();
+        };
 
-      function handleFiles(files) {
-        Array.from(files).forEach((file) => {
-          if (file.type.startsWith("image/")) {
-            const reader = new FileReader();
+        reader.readAsDataURL(file);
+    });
+}
 
-            reader.onload = (e) => {
-              uploadedImages.push(e.target.result);
-              displayImages();
-            };
+function displayImages() {
+    if (!imagePreview) return;
 
-            reader.readAsDataURL(file);
-          }
-        });
-      }
+    imagePreview.innerHTML = '';
 
-      function displayImages() {
-        imagePreview.innerHTML = "";
-        imagePreview.classList.add("active");
+    imagePreview.classList.toggle(
+        'active',
+        uploadedImages.length > 0
+    );
 
-        uploadedImages.forEach((src, index) => {
-          const previewItem = document.createElement("div");
-          previewItem.className = "preview-item";
+    uploadedImages.forEach((src, index) => {
+        const item = document.createElement('div');
+        item.className = 'preview-item';
 
-          const img = document.createElement("img");
-          img.src = src;
+        const image = document.createElement('img');
+        image.src = src;
+        image.alt = `Pré-visualização ${index + 1}`;
 
-          const removeBtn = document.createElement("button");
-          removeBtn.className = "preview-remove";
-          removeBtn.innerHTML = "×";
-          removeBtn.onclick = (e) => {
-            e.stopPropagation();
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'preview-remove';
+        remove.textContent = '×';
+        remove.setAttribute('aria-label', 'Remover imagem');
+
+        remove.addEventListener('click', () => {
             removeImage(index);
-          };
-
-          previewItem.appendChild(img);
-          previewItem.appendChild(removeBtn);
-          imagePreview.appendChild(previewItem);
         });
-      }
 
-      function removeImage(index) {
-        uploadedImages.splice(index, 1);
-        if (uploadedImages.length > 0) {
-          displayImages();
-        } else {
-          imagePreview.classList.remove("active");
-          document.getElementById("productImage").value = "";
+        item.append(image, remove);
+        imagePreview.appendChild(item);
+    });
+}
+
+function removeImage(index) {
+    uploadedImages.splice(index, 1);
+    displayImages();
+
+    const input = document.getElementById('productImage');
+
+    if (input && uploadedImages.length === 0) {
+        input.value = '';
+    }
+}
+
+// ============================================================
+// NOTIFICAÇÕES
+// ============================================================
+
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notificationText');
+
+    if (!notification || !notificationText) {
+        window.alert(message);
+        return;
+    }
+
+    notificationText.textContent = message;
+    notification.className = `notification ${type} show`;
+
+    window.setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3500);
+}
+
+// ============================================================
+// LEITURA E CONVERSÃO DOS CAMPOS
+// ============================================================
+
+function valorCampo(id) {
+    const campo = document.getElementById(id);
+    return campo ? campo.value.trim() : '';
+}
+
+function valorNumero(id, padrao = 0) {
+    const valor = valorCampo(id);
+
+    if (!valor) return padrao;
+
+    const convertido = Number(valor.replace(',', '.'));
+
+    return Number.isFinite(convertido) ? convertido : NaN;
+}
+
+// ============================================================
+// ENVIO DO CADASTRO PARA A API
+// ============================================================
+
+if (productForm) {
+    productForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const submitButton = productForm.querySelector('[type="submit"]');
+
+        const textoOriginal = submitButton
+            ? submitButton.textContent
+            : '';
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Salvando...';
         }
-      }
 
-      // Submissão do Formulário
-      document
-        .getElementById("productForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+        const produto = {
+            nome: valorCampo('productName'),
+            codigo: valorCampo('productCode'),
+            categoria: valorCampo('productCategory'),
+            marca: valorCampo('productBrand'),
+            descricao: valorCampo('productDescription'),
 
-          // Coletar dados do formulário
-          const formData = {
-            name: document.getElementById("productName").value,
-            code: document.getElementById("productCode").value,
-            category: document.getElementById("productCategory").value,
-            brand: document.getElementById("productBrand").value,
-            description: document.getElementById("productDescription").value,
-            cost: document.getElementById("productCost").value,
-            price: document.getElementById("productPrice").value,
-            stock: document.getElementById("productStock").value,
-            minStock: document.getElementById("productMinStock").value,
-            unit: document.getElementById("productUnit").value,
-            barcode: document.getElementById("productBarcode").value,
-            supplier: document.getElementById("productSupplier").value,
-            validity: document.getElementById("productValidity").value,
-            weight: document.getElementById("productWeight").value,
-            location: document.getElementById("productLocation").value,
-            images: uploadedImages,
-          };
+            preco_custo: valorNumero('productCost'),
+            preco_venda: valorNumero('productPrice'),
 
-          // Aqui você pode enviar os dados para um servidor
-          console.log("Produto a ser salvo:", formData);
+            estoque_atual: valorNumero('productStock'),
+            estoque_minimo: valorNumero('productMinStock'),
 
-          // Salvar no localStorage (simulação)
-          let products = JSON.parse(localStorage.getItem("products") || "[]");
-          formData.id = Date.now();
-          formData.createdAt = new Date().toISOString();
-          products.push(formData);
-          localStorage.setItem("products", JSON.stringify(products));
+            unidade: valorCampo('productUnit'),
+            codigo_barras: valorCampo('productBarcode'),
+            fornecedor: valorCampo('productSupplier'),
+            data_validade: valorCampo('productValidity'),
 
-          // Mostrar notificação de sucesso
-          showNotification("Produto adicionado com sucesso!", "success");
+            peso_gramas: valorNumero('productWeight', null),
+            localizacao: valorCampo('productLocation'),
 
-          // Limpar formulário
-          setTimeout(() => {
-            this.reset();
+            // O upload definitivo será implementado no Supabase Storage.
+            imagem_url: null
+        };
+
+        const camposObrigatorios = [
+            ['productName', 'Nome do produto'],
+            ['productCode', 'Código do produto'],
+            ['productCategory', 'Categoria'],
+            ['productBrand', 'Marca'],
+            ['productUnit', 'Unidade']
+        ];
+
+        const campoVazio = camposObrigatorios.find(
+            ([id]) => !valorCampo(id)
+        );
+
+        if (campoVazio) {
+            showNotification(
+                `Preencha o campo: ${campoVazio[1]}.`,
+                'error'
+            );
+
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = textoOriginal;
+            }
+
+            return;
+        }
+
+        const numerosInvalidos = [
+            produto.preco_custo,
+            produto.preco_venda,
+            produto.estoque_atual,
+            produto.estoque_minimo
+        ].some(Number.isNaN) ||
+            (
+                produto.peso_gramas !== null &&
+                Number.isNaN(produto.peso_gramas)
+            );
+
+        if (numerosInvalidos) {
+            showNotification(
+                'Confira os campos numéricos antes de salvar.',
+                'error'
+            );
+
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = textoOriginal;
+            }
+
+            return;
+        }
+
+        try {
+            const resposta = await fetch('/api/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(produto)
+            });
+
+            const resultado = await resposta.json().catch(() => ({}));
+
+            if (!resposta.ok) {
+                throw new Error(
+                    resultado.error ||
+                    'Não foi possível cadastrar o produto.'
+                );
+            }
+
+            showNotification(
+                'Produto cadastrado no banco de dados com sucesso!',
+                'success'
+            );
+
+            productForm.reset();
+
             uploadedImages = [];
-            imagePreview.classList.remove("active");
-            imagePreview.innerHTML = "";
+            displayImages();
+            calculateProfit();
 
-            // Opcional: redirecionar para lista de produtos
-            // window.location.href = '../produtos/';
-          }, 1500);
-        });
+        } catch (error) {
+            console.error('Falha ao cadastrar produto:', error);
 
-      // Mostrar Notificação
-      function showNotification(message, type = "success") {
-        const notification = document.getElementById("notification");
-        const notificationText = document.getElementById("notificationText");
+            showNotification(
+                error.message || 'Erro de comunicação com o servidor.',
+                'error'
+            );
 
-        notificationText.textContent = message;
-        notification.className = `notification ${type} show`;
-
-        setTimeout(() => {
-          notification.classList.remove("show");
-        }, 3000);
-      }
-
-      // Calcular margem de lucro automaticamente
-      document
-        .getElementById("productCost")
-        .addEventListener("input", calculateProfit);
-      document
-        .getElementById("productPrice")
-        .addEventListener("input", calculateProfit);
-
-      function calculateProfit() {
-        const cost =
-          parseFloat(document.getElementById("productCost").value) || 0;
-        const price =
-          parseFloat(document.getElementById("productPrice").value) || 0;
-
-        if (cost > 0 && price > 0) {
-          const profit = (((price - cost) / cost) * 100).toFixed(2);
-          console.log(`Margem de lucro: ${profit}%`);
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = textoOriginal;
+            }
         }
-      }
-    
+    });
+}
+
+// ============================================================
+// CÁLCULO DA MARGEM DE LUCRO
+// ============================================================
+
+function calculateProfit() {
+    const custo = valorNumero('productCost', 0);
+    const preco = valorNumero('productPrice', 0);
+
+    const margem = document.getElementById('profitMargin');
+
+    if (margem && custo > 0 && Number.isFinite(preco)) {
+        margem.textContent =
+            `${(((preco - custo) / custo) * 100).toFixed(2)}%`;
+    }
+}
+
+['productCost', 'productPrice'].forEach((id) => {
+    const campo = document.getElementById(id);
+
+    if (campo) {
+        campo.addEventListener('input', calculateProfit);
+    }
+});
