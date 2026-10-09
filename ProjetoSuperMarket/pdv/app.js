@@ -385,7 +385,7 @@
 
         // Log de boas-vindas
         console.log(
-          "%c🛒 PDV Mercado Pro",
+          "%c🛒 PDV Mercado Super Market",
           "font-size: 20px; font-weight: bold; color: #667eea;",
         );
         console.log("%cAtalhos de teclado:", "font-weight: bold;");

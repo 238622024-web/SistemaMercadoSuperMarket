@@ -1,5 +1,5 @@
 
-    function toggleSubmenu(e, id) {
+    function pageToggleSubmenu(e, id) {
       e.preventDefault();
       e.currentTarget.classList.toggle("expanded");
       document.getElementById(id).classList.toggle("open");

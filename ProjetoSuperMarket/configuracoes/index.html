@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Configurações - Mercado Pro</title>
+    <title>Configurações - Mercado Super Market</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -25,7 +25,7 @@
                 />
               </svg>
             </div>
-            <span>Mercado Pro</span>
+            <span>Mercado Super Market</span>
           </div>
         </div>
 
@@ -34,7 +34,7 @@
             <div class="nav-section-title">Principal</div>
             <ul>
               <li class="nav-item">
-                <a href="../dashboard/" class="nav-link" data-tooltip="Início">
+                <a href="../dashboard/index.html" class="nav-link" data-tooltip="Início">
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                   </svg>
@@ -42,7 +42,7 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="../analise/" class="nav-link" data-tooltip="Análise">
+                <a href="../analise/index.html" class="nav-link" data-tooltip="Análise">
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path
                       d="M5 9.5h3v9H5zm5-5h3v14h-3zm5 8h3v6h-3zM3 19.5h18v2H3z"
@@ -61,7 +61,7 @@
                 <a
                   href="#"
                   class="nav-link"
-                  onclick="toggleSubmenu(event, 'submenu-produtos')"
+                  onclick="pageToggleSubmenu(event, 'submenu-produtos')"
                   data-tooltip="Produtos"
                 >
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -80,31 +80,31 @@
                 </a>
                 <ul class="submenu" id="submenu-produtos">
                   <li class="submenu-item">
-                    <a href="../produtos/" class="submenu-link">
+                    <a href="../produtos/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Lista de Produtos</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../adicionar-produto/" class="submenu-link">
+                    <a href="../adicionar-produto/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Adicionar Produto</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../categorias/" class="submenu-link">
+                    <a href="../categorias/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Categorias</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../etiqueta-gondola/" class="submenu-link">
+                    <a href="../etiqueta-gondola/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Etiqueta de Gôndola</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../estoque/" class="submenu-link">
+                    <a href="../estoque/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Controle de Estoque</span>
                     </a>
@@ -116,7 +116,7 @@
                 <a
                   href="#"
                   class="nav-link"
-                  onclick="toggleSubmenu(event, 'submenu-vendas')"
+                  onclick="pageToggleSubmenu(event, 'submenu-vendas')"
                   data-tooltip="Vendas"
                 >
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -135,19 +135,19 @@
                 </a>
                 <ul class="submenu" id="submenu-vendas">
                   <li class="submenu-item">
-                    <a href="../pdv/" class="submenu-link">
+                    <a href="../pdv/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>PDV (Caixa)</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../vendas/" class="submenu-link">
+                    <a href="../vendas/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Histórico de Vendas</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../relatorios/" class="submenu-link">
+                    <a href="../relatorios/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Relatórios</span>
                     </a>
@@ -159,7 +159,7 @@
                 <a
                   href="#"
                   class="nav-link"
-                  onclick="toggleSubmenu(event, 'submenu-financeiro')"
+                  onclick="pageToggleSubmenu(event, 'submenu-financeiro')"
                   data-tooltip="Financeiro"
                 >
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -178,19 +178,19 @@
                 </a>
                 <ul class="submenu" id="submenu-financeiro">
                   <li class="submenu-item">
-                    <a href="../caixa/" class="submenu-link">
+                    <a href="../caixa/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Controle de Caixa</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../contas/" class="submenu-link">
+                    <a href="../contas/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Contas a Pagar/Receber</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../fluxo-caixa/" class="submenu-link">
+                    <a href="../fluxo-caixa/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Fluxo de Caixa</span>
                     </a>
@@ -202,7 +202,7 @@
                 <a
                   href="#"
                   class="nav-link"
-                  onclick="toggleSubmenu(event, 'submenu-clientes')"
+                  onclick="pageToggleSubmenu(event, 'submenu-clientes')"
                   data-tooltip="Clientes"
                 >
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -221,13 +221,13 @@
                 </a>
                 <ul class="submenu" id="submenu-clientes">
                   <li class="submenu-item">
-                    <a href="../clientes/" class="submenu-link">
+                    <a href="../clientes/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Lista de Clientes</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../adicionar-cliente/" class="submenu-link">
+                    <a href="../adicionar-cliente/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Cadastrar Cliente</span>
                     </a>
@@ -239,7 +239,7 @@
                 <a
                   href="#"
                   class="nav-link"
-                  onclick="toggleSubmenu(event, 'submenu-fornecedores')"
+                  onclick="pageToggleSubmenu(event, 'submenu-fornecedores')"
                   data-tooltip="Fornecedores"
                 >
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -258,13 +258,13 @@
                 </a>
                 <ul class="submenu" id="submenu-fornecedores">
                   <li class="submenu-item">
-                    <a href="../fornecedores/" class="submenu-link">
+                    <a href="../fornecedores/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Lista de Fornecedores</span>
                     </a>
                   </li>
                   <li class="submenu-item">
-                    <a href="../pedidos-compra/" class="submenu-link">
+                    <a href="../pedidos-compra/index.html" class="submenu-link">
                       <span class="submenu-dot"></span>
                       <span>Pedidos de Compra</span>
                     </a>
@@ -279,7 +279,7 @@
             <ul>
               <li class="nav-item">
                 <a
-                  href="../configuracoes/"
+                  href="../configuracoes/index.html"
                   class="nav-link active"
                   data-tooltip="Configurações"
                 >
@@ -336,7 +336,7 @@
               </button>
               <div>
                 <div class="breadcrumb">
-                  <a href="../dashboard/">Dashboard</a>
+                  <a href="../dashboard/index.html">Dashboard</a>
                   <span>›</span>
                   <span>Sistema</span>
                   <span>›</span>
@@ -361,7 +361,7 @@
                   <div class="label">Loja</div>
                   <div class="card-icon">🏪</div>
                 </div>
-                <div class="value">Mercado Pro</div>
+                <div class="value">Mercado Super Market</div>
                 <div class="meta">Ativa e sincronizada</div>
               </div>
 
@@ -403,7 +403,7 @@
                   <div class="form-grid">
                     <label class="field">
                       <span>Nome da loja</span>
-                      <input type="text" value="Mercado Pro" />
+                      <input type="text" value="Mercado Super Market" />
                     </label>
                     <label class="field">
                       <span>CNPJ</span>

@@ -1,5 +1,5 @@
 
-      function toggleSubmenu(event, id) {
+      function pageToggleSubmenu(event, id) {
         event.preventDefault();
         const link = event.currentTarget;
         const menu = document.getElementById(id);

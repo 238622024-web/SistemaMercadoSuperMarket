@@ -18,7 +18,7 @@ function toggleSidebar() {
     }
 }
 
-function toggleSubmenu(event, submenuId) {
+function pageToggleSubmenu(event, submenuId) {
     event.preventDefault();
 
     const submenu = document.getElementById(submenuId);

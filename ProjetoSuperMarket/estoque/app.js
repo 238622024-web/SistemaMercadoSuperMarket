@@ -64,7 +64,7 @@
                             <p style="font-size: 14px; color: #94a3b8; margin-bottom: 20px;">
                                 Cadastre produtos no sistema para gerenciar o estoque
                             </p>
-                            <button onclick="window.location.href='../adicionar-produto/'" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                            <button onclick="window.location.href='../adicionar-produto/index.html'" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;">
                                 ➕ Cadastrar Produtos
                             </button>
                         </td>

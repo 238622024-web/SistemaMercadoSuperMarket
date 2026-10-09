@@ -1,5 +1,5 @@
 // ========================================
-// SIDEBAR NAVIGATION - Mercado Pro
+// SIDEBAR NAVIGATION - Super Market
 // ========================================
 // Script compartilhado por todas as páginas do sistema
 // Responsável por:
@@ -151,7 +151,7 @@ const SIDEBAR_NAVIGATION = [
 // SUBMENUS
 // ========================================
 
-function toggleSubmenu(event, submenuId) {
+function toggleSidebarSubmenu(event, submenuId) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
@@ -163,11 +163,12 @@ function toggleSubmenu(event, submenuId) {
 
   if (!submenu || !sidebar) return;
 
-  if (
+  const sidebarWasCollapsed =
     window.innerWidth > 850
       ? sidebar.classList.contains("collapsed")
-      : !sidebar.classList.contains("mobile-visible")
-  ) {
+      : !sidebar.classList.contains("mobile-visible");
+
+  if (sidebarWasCollapsed) {
     if (window.innerWidth > 850) {
       sidebar.classList.remove("collapsed");
       getMainContent()?.classList.remove("expanded");
@@ -177,7 +178,8 @@ function toggleSubmenu(event, submenuId) {
     }
   }
 
-  const isOpen = submenu.classList.contains("open");
+  const shouldOpen =
+    sidebarWasCollapsed || !submenu.classList.contains("open");
 
   sidebar.querySelectorAll(".submenu.open").forEach((openSubmenu) => {
     if (openSubmenu === submenu) return;
@@ -189,29 +191,29 @@ function toggleSubmenu(event, submenuId) {
     openLink?.setAttribute("aria-expanded", "false");
   });
 
-  submenu.classList.toggle("open", !isOpen);
+  submenu.classList.toggle("open", shouldOpen);
 
-  link?.classList.toggle("expanded", !isOpen);
+  link?.classList.toggle("expanded", shouldOpen);
 
   link?.setAttribute(
     "aria-expanded",
-    String(!isOpen)
+    String(shouldOpen)
   );
 }
 
 
-function toggleMenu(event, submenuId) {
-  toggleSubmenu(event, submenuId);
+function toggleSidebarMenu(event, submenuId) {
+  toggleSidebarSubmenu(event, submenuId);
 }
 
 
-function toggleManagement(event, submenuId) {
-  toggleSubmenu(event, submenuId);
+function toggleSidebarManagement(event, submenuId) {
+  toggleSidebarSubmenu(event, submenuId);
 }
 
 
-function toggleCustomerSubmenu(event) {
-  toggleSubmenu(event, "clients-submenu");
+function toggleSidebarCustomerSubmenu(event) {
+  toggleSidebarSubmenu(event, "clients-submenu");
 }
 
 
@@ -228,53 +230,35 @@ function getMainContent() {
 
 
 // ========================================
-// PARTÍCULAS
+// PARTÍCULAS DECORATIVAS
 // ========================================
 
 function createSidebarParticles(sidebar) {
-  if (!sidebar) return;
-
-  if (sidebar.querySelector(".sidebar-particles")) {
-    return;
-  }
+  if (!sidebar || sidebar.querySelector(".sidebar-particles")) return;
 
   const particlesContainer = document.createElement("div");
-
   particlesContainer.className = "sidebar-particles";
   particlesContainer.setAttribute("aria-hidden", "true");
 
-  const particleCount = 34;
-
-  for (let i = 0; i < particleCount; i++) {
+  for (let index = 0; index < 22; index += 1) {
     const particle = document.createElement("span");
+    const size = Math.random() * 2.5 + 1.5;
+    const duration = Math.random() * 7 + 8;
 
     particle.className = "sidebar-particle";
+    if (index % 5 === 0) {
+      particle.classList.add("sidebar-particle--bright");
+    }
 
-    const size = Math.random() * 3 + 1;
-    const left = Math.random() * 100;
-    const top = Math.random() * 100;
-    const duration = Math.random() * 8 + 7;
-    const delay = Math.random() * -12;
-    const drift = Math.random() * 80 - 40;
-
+    particle.style.left = `${Math.random() * 100}%`;
+    particle.style.top = `${Math.random() * 100}%`;
     particle.style.width = `${size}px`;
     particle.style.height = `${size}px`;
-    particle.style.left = `${left}%`;
-    particle.style.top = `${top}%`;
-
-    particle.style.setProperty(
-      "--particle-duration",
-      `${duration}s`
-    );
-
-    particle.style.setProperty(
-      "--particle-delay",
-      `${delay}s`
-    );
-
+    particle.style.setProperty("--particle-duration", `${duration}s`);
+    particle.style.setProperty("--particle-delay", `${Math.random() * -15}s`);
     particle.style.setProperty(
       "--particle-drift",
-      `${drift}px`
+      `${Math.random() * 36 - 18}px`
     );
 
     particlesContainer.appendChild(particle);
@@ -294,14 +278,12 @@ function renderCompleteSidebar(sidebar) {
 
       <div class="logo">
 
-        <div class="logo-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2 2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-8-5z"/>
-          </svg>
+        <div class="logo-icon">
+          <img src="../images/Logo-SuperMarket.png" alt="Logo Super Market" />
         </div>
 
         <div class="logo-copy">
-          <span>Mercado Pro</span>
+          <span>Super Market</span>
           <small>GESTÃO INTELIGENTE</small>
         </div>
 
@@ -354,7 +336,9 @@ function renderCompleteSidebar(sidebar) {
     sidebar.querySelector(".sidebar-nav");
 
   const currentPath =
-    window.location.pathname.replace(/\/$/, "");
+    window.location.pathname
+      .replace(/\/index\.html$/, "")
+      .replace(/\/$/, "");
 
 
   // ========================================
@@ -515,7 +499,7 @@ function renderCompleteSidebar(sidebar) {
         link.addEventListener(
           "click",
           (event) =>
-            toggleSubmenu(
+            toggleSidebarSubmenu(
               event,
               submenuId
             )
@@ -552,7 +536,7 @@ function renderCompleteSidebar(sidebar) {
               "submenu-link";
 
             childLink.href =
-              `../${route}/`;
+              `../${route}/index.html`;
 
 
             const dot =
@@ -598,14 +582,19 @@ function renderCompleteSidebar(sidebar) {
 
         link.href =
           item.route
-            ? `../${item.route}/`
+            ? `../${item.route}/index.html`
             : "#";
 
 
         if (
           item.route &&
-          currentPath.endsWith(
-            `/${item.route}`
+          (
+            currentPath.endsWith(
+              `/${item.route}`
+            ) ||
+            currentPath.endsWith(
+              `/${item.route}/index.html`
+            )
           )
         ) {
           link.classList.add(
@@ -646,10 +635,9 @@ function renderCompleteSidebar(sidebar) {
 function initializeSubmenus() {
 
   const currentPath =
-    window.location.pathname.replace(
-      /\/$/,
-      ""
-    );
+    window.location.pathname
+      .replace(/\/index\.html$/, "")
+      .replace(/\/$/, "");
 
 
   document
@@ -667,10 +655,9 @@ function initializeSubmenus() {
             new URL(
               link.href,
               window.location.href
-            ).pathname.replace(
-              /\/$/,
-              ""
-            );
+            ).pathname
+              .replace(/\/index\.html$/, "")
+              .replace(/\/$/, "");
 
           return (
             linkPath === currentPath
@@ -969,15 +956,15 @@ function setMobileSidebarVisibility(
     isVisible
   );
 
-
-  overlay.classList.remove("active");
-
-
   overlay.setAttribute(
     "aria-hidden",
-    "true"
+    String(!isVisible)
   );
 
+  overlay.classList.toggle(
+    "active",
+    isVisible
+  );
 
   document.body.classList.toggle(
     "sidebar-open",
@@ -993,7 +980,7 @@ function setMobileSidebarVisibility(
 // TOGGLE SIDEBAR
 // ========================================
 
-function toggleSidebar() {
+function toggleSharedSidebar() {
 
   const sidebar =
     document.getElementById(
@@ -1122,7 +1109,7 @@ document.addEventListener(
 
         event.stopImmediatePropagation();
 
-        toggleSidebar();
+        toggleSharedSidebar();
 
       },
       true
@@ -1160,7 +1147,7 @@ document.addEventListener(
 
       closeButton.addEventListener(
         "click",
-        toggleSidebar
+        toggleSharedSidebar
       );
 
 
@@ -1251,8 +1238,9 @@ document.addEventListener(
             "mobile-visible"
           );
 
-
-          getSidebarOverlay().classList.remove("active");
+          const overlay = getSidebarOverlay();
+          overlay.classList.remove("active");
+          overlay.setAttribute("aria-hidden", "true");
 
 
           document.body.classList.remove(
@@ -1277,10 +1265,9 @@ document.addEventListener(
           );
 
 
-          getSidebarOverlay()
-            .classList.remove(
-              "active"
-            );
+          const overlay = getSidebarOverlay();
+          overlay.classList.remove("active");
+          overlay.setAttribute("aria-hidden", "true");
 
 
           document.body.classList.remove(

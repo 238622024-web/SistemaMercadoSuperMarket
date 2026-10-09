@@ -9,7 +9,7 @@
       const offer = document.getElementById("offer");
       const labelCount = document.getElementById("labelCount");
 
-      function toggleSubmenu(event, submenuId) {
+      function pageToggleSubmenu(event, submenuId) {
         event.preventDefault();
         const link = event.currentTarget;
         const submenu = document.getElementById(submenuId);
