@@ -12,7 +12,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
-const FRONTEND_PATH = path.join(__dirname, 'ProjetoSuperMarket');
+const FRONTEND_PATH = path.join(__dirname, 'dist');
 
 // ============================================================
 // CONFIGURAÇÃO DO SUPABASE
@@ -23,12 +23,22 @@ const supabaseUrl = process.env.SUPABASE_URL;
 // A chave secreta deve ficar exclusivamente no backend.
 // Não coloque essa chave em arquivos JavaScript do navegador.
 const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_ANON_KEY;
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase =
     supabaseUrl && supabaseKey
         ? createClient(supabaseUrl, supabaseKey, {
+              auth: {
+                  autoRefreshToken: false,
+                  persistSession: false
+              }
+          })
+        : null;
+
+const supabaseAdmin =
+    supabaseUrl && process.env.SUPABASE_SERVICE_ROLE_KEY
+        ? createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY, {
               auth: {
                   autoRefreshToken: false,
                   persistSession: false
@@ -252,6 +262,103 @@ function exigirSupabase(req, res, next) {
     next();
 }
 
+function exigirSupabaseAdmin(req, res, next) {
+    if (!supabaseAdmin) {
+        return res.status(503).json({
+            error: 'O cadastro de colaboradores requer SUPABASE_SERVICE_ROLE_KEY configurada somente no backend.'
+        });
+    }
+
+    next();
+}
+
+async function exigirUsuario(req, res, next) {
+    const token = String(req.get('authorization') || '').match(/^Bearer\s+(.+)$/i)?.[1];
+    if (!token) {
+        return res.status(401).json({ error: 'Entre no sistema para continuar.' });
+    }
+    if (!supabase) {
+        return res.status(503).json({
+            error: 'A autenticação do Supabase não está configurada no backend.'
+        });
+    }
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) {
+            return res.status(401).json({ error: 'Sua sessão é inválida ou expirou. Entre novamente.' });
+        }
+
+        const appMetadata = user.app_metadata || {};
+        if (!['admin', 'cashier'].includes(appMetadata.role) || appMetadata.is_active === false) {
+            return res.status(403).json({ error: 'Esta conta não possui acesso ativo ao sistema.' });
+        }
+
+        req.authUser = user;
+        req.userProfile = {
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.email,
+            email: user.email,
+            role: appMetadata.role,
+            is_active: appMetadata.is_active !== false,
+            must_change_password: appMetadata.must_change_password === true
+        };
+        return next();
+    } catch (error) {
+        console.error('Falha ao validar a sessão do usuário.', error);
+        return res.status(500).json({ error: 'Não foi possível validar sua sessão.' });
+    }
+}
+
+function exigirPapel(...roles) {
+    return (req, res, next) => {
+        if (req.userProfile.must_change_password) {
+            return res.status(403).json({ error: 'Altere sua senha inicial antes de usar o sistema.' });
+        }
+        if (!roles.includes(req.userProfile.role)) {
+            return res.status(403).json({ error: 'Seu perfil não tem permissão para esta operação.' });
+        }
+        return next();
+    };
+}
+
+app.post('/api/auth/login', exigirSupabase, async (req, res) => {
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Informe o e-mail e a senha.' });
+    }
+
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error || !data.session) {
+            return res.status(401).json({ error: 'E-mail ou senha incorretos.' });
+        }
+        return res.json({ session: data.session });
+    } catch (error) {
+        console.error('Não foi possível autenticar o usuário.', error);
+        return res.status(500).json({ error: 'Não foi possível entrar no sistema.' });
+    }
+});
+
+app.post('/api/auth/refresh', exigirSupabase, async (req, res) => {
+    const refreshToken = typeof req.body?.refreshToken === 'string' ? req.body.refreshToken : '';
+    if (!refreshToken) {
+        return res.status(400).json({ error: 'Token de sessão ausente. Entre novamente.' });
+    }
+
+    try {
+        const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+        if (error || !data.session) {
+            return res.status(401).json({ error: 'Sua sessão expirou. Entre novamente.' });
+        }
+        return res.json({ session: data.session });
+    } catch (error) {
+        console.error('Não foi possível renovar a sessão.', error);
+        return res.status(500).json({ error: 'Não foi possível renovar a sessão.' });
+    }
+});
+
 // ============================================================
 // ROTA DE VERIFICAÇÃO DO SERVIDOR
 // ============================================================
@@ -264,6 +371,165 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+app.get('/api/me', exigirSupabase, exigirUsuario, (req, res) => {
+    res.json({ user: req.userProfile });
+});
+
+app.patch('/api/me/password', exigirSupabaseAdmin, exigirUsuario, async (req, res) => {
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'A nova senha deve ter pelo menos 8 caracteres.' });
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(req.authUser.id, {
+        password,
+        app_metadata: {
+            ...req.authUser.app_metadata,
+            must_change_password: false
+        }
+    });
+    if (error) {
+        console.error('Não foi possível concluir a atualização da conta.', error);
+        return res.status(400).json({ error: 'Não foi possível atualizar a senha. Verifique os requisitos e tente novamente.' });
+    }
+
+    return res.json({ message: 'Senha atualizada.' });
+});
+
+app.get(
+    '/api/collaborators',
+    exigirSupabaseAdmin,
+    exigirUsuario,
+    exigirPapel('admin'),
+    async (req, res) => {
+        const collaborators = [];
+        for (let page = 1; page <= 20; page += 1) {
+            const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+            if (error) {
+                console.error('Não foi possível listar os colaboradores.', error);
+                return res.status(500).json({ error: 'Não foi possível carregar os colaboradores.' });
+            }
+            collaborators.push(...data.users
+                .filter((user) => user.app_metadata?.role === 'cashier')
+                .map((user) => ({
+                    id: user.id,
+                    full_name: user.user_metadata?.full_name || user.email,
+                    email: user.email,
+                    role: 'cashier',
+                    is_active: user.app_metadata?.is_active !== false,
+                    created_at: user.created_at
+                })));
+            if (data.users.length < 1000) break;
+        }
+        if (collaborators.length === 0) {
+            return res.json({ data: [] });
+        }
+        if (collaborators.length > 20000) {
+            return res.status(500).json({ error: 'Não foi possível carregar os colaboradores.' });
+        }
+        collaborators.sort((left, right) => right.created_at.localeCompare(left.created_at));
+        return res.json({ data: collaborators });
+    }
+);
+
+app.post(
+    '/api/collaborators',
+    exigirSupabaseAdmin,
+    exigirUsuario,
+    exigirPapel('admin'),
+    async (req, res) => {
+        const fullName = typeof req.body?.fullName === 'string' ? req.body.fullName.trim() : '';
+        const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+        const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+        if (fullName.length < 2 || fullName.length > 120) {
+            return res.status(400).json({ error: 'Informe um nome de 2 a 120 caracteres.' });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ error: 'Informe um e-mail válido.' });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ error: 'A senha inicial deve ter pelo menos 8 caracteres.' });
+        }
+
+        const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: { full_name: fullName },
+            app_metadata: {
+                role: 'cashier',
+                is_active: true,
+                must_change_password: true
+            }
+        });
+        if (createError || !created.user) {
+            if (createError?.code === 'email_exists') {
+                return res.status(409).json({ error: 'Já existe uma conta com este e-mail.' });
+            }
+            console.error('Não foi possível criar a conta do colaborador.', createError);
+            return res.status(400).json({ error: 'Não foi possível criar a conta. Confira o e-mail e a senha inicial.' });
+        }
+
+        return res.status(201).json({
+            data: {
+                id: created.user.id,
+                full_name: fullName,
+                email,
+                role: 'cashier',
+                is_active: true,
+                created_at: created.user.created_at
+            }
+        });
+    }
+);
+
+app.patch(
+    '/api/collaborators/:id/status',
+    exigirSupabaseAdmin,
+    exigirUsuario,
+    exigirPapel('admin'),
+    async (req, res) => {
+        const isActive = req.body?.isActive;
+        if (typeof isActive !== 'boolean') {
+            return res.status(400).json({ error: 'Informe se o colaborador deve ficar ativo ou inativo.' });
+        }
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.params.id)) {
+            return res.status(400).json({ error: 'Identificador de colaborador inválido.' });
+        }
+        if (req.params.id === req.authUser.id) {
+            return res.status(400).json({ error: 'Não é possível alterar o status da própria conta por esta tela.' });
+        }
+
+        const { data: current, error: lookupError } = await supabaseAdmin.auth.admin.getUserById(req.params.id);
+        if (lookupError) {
+            console.error('Não foi possível consultar o colaborador.', lookupError);
+            return res.status(500).json({ error: 'Não foi possível atualizar o acesso do colaborador.' });
+        }
+        if (!current.user || current.user.app_metadata?.role !== 'cashier') {
+            return res.status(404).json({ error: 'Colaborador não encontrado.' });
+        }
+
+        const { data: updated, error } = await supabaseAdmin.auth.admin.updateUserById(req.params.id, {
+            app_metadata: { ...current.user.app_metadata, is_active: isActive }
+        });
+        if (error) {
+            console.error('Não foi possível atualizar o acesso do colaborador.', error);
+            return res.status(500).json({ error: 'Não foi possível atualizar o acesso do colaborador.' });
+        }
+        return res.json({
+            data: {
+                id: updated.user.id,
+                full_name: updated.user.user_metadata?.full_name || updated.user.email,
+                email: updated.user.email,
+                role: 'cashier',
+                is_active: isActive,
+                created_at: updated.user.created_at
+            }
+        });
+    }
+);
+
 // ============================================================
 // LISTAR E PESQUISAR PRODUTOS
 // GET /api/products
@@ -273,7 +539,7 @@ app.get('/api/health', (req, res) => {
 // /api/products?active=all
 // ============================================================
 
-app.get('/api/products', exigirSupabase, async (req, res) => {
+app.get('/api/products', exigirSupabase, exigirUsuario, exigirPapel('admin', 'cashier'), async (req, res) => {
     try {
         let consulta = supabase
             .from('produtos')
@@ -326,7 +592,7 @@ app.get('/api/products', exigirSupabase, async (req, res) => {
 // GET /api/products/:id
 // ============================================================
 
-app.get('/api/products/:id', exigirSupabase, async (req, res) => {
+app.get('/api/products/:id', exigirSupabase, exigirUsuario, exigirPapel('admin', 'cashier'), async (req, res) => {
     const id = Number(req.params.id);
 
     if (!Number.isSafeInteger(id) || id <= 0) {
@@ -359,7 +625,7 @@ app.get('/api/products/:id', exigirSupabase, async (req, res) => {
 // POST /api/products
 // ============================================================
 
-app.post('/api/products', exigirSupabase, async (req, res) => {
+app.post('/api/products', exigirSupabase, exigirUsuario, exigirPapel('admin'), async (req, res) => {
     let produto;
 
     try {
@@ -391,7 +657,7 @@ app.post('/api/products', exigirSupabase, async (req, res) => {
 // PUT /api/products/:id
 // ============================================================
 
-app.put('/api/products/:id', exigirSupabase, async (req, res) => {
+app.put('/api/products/:id', exigirSupabase, exigirUsuario, exigirPapel('admin'), async (req, res) => {
     const id = Number(req.params.id);
 
     if (!Number.isSafeInteger(id) || id <= 0) {
@@ -448,6 +714,8 @@ app.put('/api/products/:id', exigirSupabase, async (req, res) => {
 app.patch(
     '/api/products/:id/deactivate',
     exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
     async (req, res) => {
         const id = Number(req.params.id);
 
@@ -485,6 +753,10 @@ app.patch(
 // ARQUIVOS DO FRONTEND
 // ============================================================
 
+app.get('/', (req, res) => {
+    res.redirect('/dashboard/');
+});
+
 app.use(express.static(FRONTEND_PATH));
 
 app.use('/api', (req, res) => {
@@ -494,7 +766,7 @@ app.use('/api', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-    res.redirect('/dashboard/');
+    res.sendFile(path.join(FRONTEND_PATH, 'index.html'));
 });
 
 // ============================================================

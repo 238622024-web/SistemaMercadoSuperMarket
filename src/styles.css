@@ -1,0 +1,126 @@
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.legacy-screen {
+  min-height: 100vh;
+}
+
+.legacy-screen > .app,
+.legacy-screen > .app-container {
+  display: flex !important;
+  align-items: stretch;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.legacy-screen .main,
+.legacy-screen .main-content {
+  box-sizing: border-box;
+  flex: 1 1 auto !important;
+  width: calc(100% - var(--sidebar-width, 280px)) !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin-left: var(--sidebar-width, 280px) !important;
+}
+
+.legacy-screen .main.expanded,
+.legacy-screen .main-content.expanded {
+  width: calc(100% - var(--sidebar-collapsed-width, 84px)) !important;
+  margin-left: var(--sidebar-collapsed-width, 84px) !important;
+}
+
+.legacy-screen .main.fully-hidden,
+.legacy-screen .main-content.fully-hidden {
+  width: 100% !important;
+  margin-left: 0 !important;
+}
+
+@media (max-width: 850px) {
+  .legacy-screen > .app,
+  .legacy-screen > .app-container {
+    min-height: 100vh;
+  }
+
+  .legacy-screen .main,
+  .legacy-screen .main-content,
+  .legacy-screen .main.expanded,
+  .legacy-screen .main-content.expanded {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+  }
+}
+
+.screen-loading {
+  padding: 24px;
+  color: #64748b;
+  font: 500 14px Inter, sans-serif;
+}
+
+.initial-password {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  color: #1e293b;
+  background: #f1f5f9;
+  font-family: Inter, sans-serif;
+}
+
+.initial-password form {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 420px);
+  padding: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 32px #0f172a14;
+}
+
+.initial-password h1 {
+  font-size: 24px;
+}
+
+.initial-password input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.initial-password button {
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: #4f46e5;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.react-notification {
+  position: fixed;
+  z-index: 10000;
+  right: 24px;
+  bottom: 24px;
+  max-width: min(420px, calc(100vw - 48px));
+  padding: 16px 20px;
+  border-radius: 10px;
+  color: #fff;
+  background: #15803d;
+  box-shadow: 0 12px 32px #0003;
+}
+
+.react-notification.error {
+  background: #b91c1c;
+}

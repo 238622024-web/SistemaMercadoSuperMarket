@@ -309,9 +309,12 @@
       }
 
       .menu-toggle {
-        display: none;
+        display: inline-flex;
+        flex: 0 0 auto;
         width: 42px;
         height: 42px;
+        align-items: center;
+        justify-content: center;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
         background: #fff;

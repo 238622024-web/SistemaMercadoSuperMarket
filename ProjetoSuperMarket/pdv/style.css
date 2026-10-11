@@ -282,6 +282,7 @@
         grid-template-columns: 1fr 450px;
         height: 100vh;
         flex: 1;
+        min-width: 0;
       }
 
       /* Área de Produtos */

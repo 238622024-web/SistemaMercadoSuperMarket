@@ -592,9 +592,176 @@
       </main>
     </div>
 
-    
-    
-      <script src="app.js"></script>
-      <script src="../sidebar.js"></script>
+    <div
+      class="product-modal"
+      id="productDetailsModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="productDetailsTitle"
+      aria-describedby="productDetailsSubtitle"
+      hidden
+    >
+      <section class="product-modal-card">
+        <header class="product-modal-header">
+          <div>
+            <h2 id="productDetailsTitle">Detalhes do produto</h2>
+            <p id="productDetailsSubtitle">Informações cadastradas</p>
+          </div>
+          <button
+            type="button"
+            class="product-modal-close"
+            id="closeProductDetails"
+            aria-label="Fechar detalhes do produto"
+          >
+            &times;
+          </button>
+        </header>
+        <dl class="product-details-list" id="productDetailsList"></dl>
+        <div class="product-modal-actions" id="productDetailsActions">
+          <button type="button" class="product-modal-button secondary" id="editProductButton">
+            Editar
+          </button>
+          <button type="button" class="product-modal-button danger" id="deactivateProductButton">
+            Desativar
+          </button>
+        </div>
+        <form class="product-edit-form" id="productEditForm" hidden>
+          <div class="product-edit-grid">
+            <label class="product-edit-field">
+              Nome do produto
+              <input name="nome" type="text" required />
+            </label>
+            <label class="product-edit-field">
+              Código/SKU
+              <input name="codigo" type="text" required />
+            </label>
+            <label class="product-edit-field">
+              Categoria
+              <select name="categoria" required>
+                <option value="">Selecione uma categoria</option>
+                <option value="alimentos">Alimentos</option>
+                <option value="bebidas">Bebidas</option>
+                <option value="higiene">Higiene e Limpeza</option>
+                <option value="frios">Frios e Laticínios</option>
+                <option value="hortifruti">Hortifrúti</option>
+                <option value="padaria">Padaria</option>
+                <option value="acougue">Açougue</option>
+                <option value="outros">Outros</option>
+              </select>
+            </label>
+            <label class="product-edit-field">
+              Marca
+              <input name="marca" type="text" required />
+            </label>
+            <label class="product-edit-field product-edit-field-wide">
+              Descrição
+              <textarea name="descricao" rows="3"></textarea>
+            </label>
+            <label class="product-edit-field">
+              Preço de custo (R$)
+              <input name="preco_custo" type="number" min="0" step="0.01" required />
+            </label>
+            <label class="product-edit-field">
+              Preço de venda (R$)
+              <input name="preco_venda" type="number" min="0" step="0.01" required />
+            </label>
+            <label class="product-edit-field">
+              Estoque atual
+              <input name="estoque_atual" type="number" min="0" step="any" required />
+            </label>
+            <label class="product-edit-field">
+              Estoque mínimo
+              <input name="estoque_minimo" type="number" min="0" step="any" />
+            </label>
+            <label class="product-edit-field">
+              Unidade
+              <select name="unidade" required>
+                <option value="">Selecione</option>
+                <option value="un">Unidade (UN)</option>
+                <option value="kg">Quilograma (KG)</option>
+                <option value="g">Grama (G)</option>
+                <option value="l">Litro (L)</option>
+                <option value="ml">Mililitro (ML)</option>
+                <option value="cx">Caixa (CX)</option>
+                <option value="pc">Pacote (PC)</option>
+              </select>
+            </label>
+            <label class="product-edit-field">
+              Código de barras
+              <input name="codigo_barras" type="text" />
+            </label>
+            <label class="product-edit-field">
+              Fornecedor
+              <select name="fornecedor">
+                <option value="">Selecione um fornecedor</option>
+                <option value="fornecedor1">Distribuidora ABC</option>
+                <option value="fornecedor2">Atacado XYZ</option>
+                <option value="fornecedor3">Fornecedor Central</option>
+              </select>
+            </label>
+            <label class="product-edit-field">
+              Data de validade
+              <input name="data_validade" type="date" />
+            </label>
+            <label class="product-edit-field">
+              Peso (g)
+              <input name="peso_gramas" type="number" min="0" step="any" />
+            </label>
+            <label class="product-edit-field">
+              Localização
+              <input name="localizacao" type="text" />
+            </label>
+          </div>
+          <p class="product-edit-error" id="productEditError" role="alert" hidden></p>
+          <div class="product-modal-actions">
+            <button type="button" class="product-modal-button secondary" id="cancelProductEdit">
+              Cancelar
+            </button>
+            <button type="submit" class="product-modal-button primary" id="saveProductEdit">
+              Salvar alterações
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div
+      class="product-modal confirmation-modal"
+      id="deactivateConfirmModal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="deactivateConfirmTitle"
+      aria-describedby="deactivateConfirmMessage"
+      hidden
+    >
+      <section class="confirmation-card">
+        <div class="confirmation-icon" aria-hidden="true">!</div>
+        <h2 id="deactivateConfirmTitle">Desativar produto?</h2>
+        <p id="deactivateConfirmMessage"></p>
+        <p class="confirmation-note">
+          O produto não será excluído permanentemente. Você poderá consultá-lo
+          como inativo.
+        </p>
+        <div class="product-modal-actions">
+          <button
+            type="button"
+            class="product-modal-button secondary"
+            id="cancelDeactivateProduct"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="product-modal-button danger"
+            id="confirmDeactivateProduct"
+          >
+            Sim, desativar
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="../sidebar.js"></script>
 </body>
 </html>
