@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import pageCss from './colaboradores.css?inline';
 import sidebarCss from '../../ProjetoSuperMarket/sidebar.css?inline';
 import Sidebar from '../Sidebar.jsx';
 import { authorizedFetch } from '../auth.js';
+import { AuthContext } from '../authContext.js';
+import { roleLabel } from '../roles.js';
 
 export default function ColaboradoresScreen() {
+  const { userProfile } = useContext(AuthContext);
   const [collaborators, setCollaborators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,7 +44,8 @@ export default function ColaboradoresScreen() {
         body: JSON.stringify({
           fullName: formData.get('fullName'),
           email: formData.get('email'),
-          password: formData.get('password')
+          password: formData.get('password'),
+          role: formData.get('role')
         })
       });
       const result = await response.json();
@@ -97,13 +101,13 @@ export default function ColaboradoresScreen() {
             <div className="collaborators-content">
               <section className="collaborators-intro">
                 <h2>Contas da equipe</h2>
-                <p>O perfil Colaborador pode acessar somente o PDV e a Etiqueta de Gôndola. A senha inicial deve ser trocada no primeiro acesso.</p>
+                <p>Escolha o cargo de acordo com a função. Somente administradores gerenciam todos os dados; os outros cargos têm acesso restrito às páginas necessárias ao trabalho.</p>
               </section>
 
               {notice && <div className={`collaborators-notice ${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'}>{notice.text}</div>}
 
               <section className="collaborators-card">
-                <h2>Criar colaborador</h2>
+                <h2>Criar usuário</h2>
                 <form className="collaborator-form" onSubmit={createCollaborator}>
                   <label>
                     Nome completo
@@ -112,6 +116,15 @@ export default function ColaboradoresScreen() {
                   <label>
                     E-mail de acesso
                     <input name="email" type="email" autoComplete="email" required />
+                  </label>
+                  <label>
+                    Cargo
+                    <select name="role" defaultValue="cashier" required>
+                      <option value="cashier">Operador de Caixa — PDV e etiquetas</option>
+                      <option value="product_clerk">Cadastro de Produtos — adicionar produtos e etiquetas</option>
+                      <option value="cashier_product">Caixa e Produtos — PDV, cadastro e etiquetas</option>
+                      <option value="admin">Administrador</option>
+                    </select>
                   </label>
                   <label>
                     Senha inicial
@@ -124,7 +137,7 @@ export default function ColaboradoresScreen() {
 
               <section className="collaborators-card">
                 <div className="collaborators-list-heading">
-                  <h2>Colaboradores cadastrados</h2>
+                  <h2>Usuários cadastrados</h2>
                   <button type="button" onClick={() => void loadCollaborators()} disabled={loading}>Atualizar lista</button>
                 </div>
                 {loading ? (
@@ -140,16 +153,16 @@ export default function ColaboradoresScreen() {
                           <tr key={collaborator.id}>
                             <td>{collaborator.full_name}</td>
                             <td>{collaborator.email}</td>
-                            <td>PDV e Etiqueta de Gôndola</td>
+                            <td>{roleLabel(collaborator.role)}</td>
                             <td><span className={`collaborator-status${collaborator.is_active ? ' active' : ''}`}>{collaborator.is_active ? 'Ativo' : 'Inativo'}</span></td>
-                            <td><button type="button" className="collaborator-status-button" onClick={() => void toggleStatus(collaborator)}>{collaborator.is_active ? 'Desativar' : 'Reativar'}</button></td>
+                            <td><button type="button" className="collaborator-status-button" onClick={() => void toggleStatus(collaborator)} disabled={collaborator.id === userProfile?.id}>{collaborator.is_active ? 'Desativar' : 'Reativar'}</button></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p>Nenhum colaborador cadastrado.</p>
+                  <p>Nenhum usuário cadastrado.</p>
                 )}
               </section>
             </div>

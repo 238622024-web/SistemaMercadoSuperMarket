@@ -1,19 +1,34 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import pageCss from './perfil.css?inline';
 import sidebarCss from '../../ProjetoSuperMarket/sidebar.css?inline';
 import Sidebar from '../Sidebar.jsx';
 import { PROFILE_PHOTO_STORAGE_KEY, PROFILE_PHOTO_UPDATED_EVENT } from '../profilePhoto.js';
+import { AuthContext } from '../authContext.js';
+import { authorizedFetch } from '../auth.js';
+import { roleLabel } from '../roles.js';
 
 export default function perfilScreen() {
+  const { userProfile, updateUserProfile } = useContext(AuthContext);
   const [profile, setProfile] = useState({
-    name: 'Administrador',
-    email: 'admin@supermarket.com',
-    phone: '(11) 99999-0000'
+    name: userProfile?.full_name || '',
+    email: userProfile?.email || ''
   });
   const [profileDraft, setProfileDraft] = useState(profile);
   const [notice, setNotice] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState('');
   const photoInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!userProfile) return;
+    const currentProfile = {
+      name: userProfile.full_name || '',
+      email: userProfile.email || ''
+    };
+    setProfile(currentProfile);
+    setProfileDraft(currentProfile);
+  }, [userProfile]);
 
   useEffect(() => {
     const syncPhoto = (event) => {
@@ -85,21 +100,74 @@ export default function perfilScreen() {
     }
   };
 
-  const saveProfile = (event) => {
+  const saveProfile = async (event) => {
     event.preventDefault();
-    setProfile(profileDraft);
-    setNotice({ type: 'success', text: 'Alterações salvas nesta demonstração. Nenhum dado foi enviado ao banco.' });
+    setProfileSaving(true);
+    setNotice('');
+    try {
+      const response = await authorizedFetch('/api/me/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName: profileDraft.name, email: profileDraft.email })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Não foi possível salvar seu perfil.');
+
+      const updatedProfile = {
+        ...profile,
+        name: result.user.full_name,
+        email: result.user.email
+      };
+      setProfile(updatedProfile);
+      updateUserProfile(result.user);
+      setProfileDraft({
+        ...updatedProfile,
+        email: result.emailChangePending ? result.requestedEmail : result.user.email
+      });
+      setNotice({
+        type: 'success',
+        text: result.emailChangePending
+          ? `Nome salvo. Para concluir a troca do e-mail, confirme o endereço enviado para ${result.requestedEmail}.`
+          : 'Perfil atualizado com sucesso.'
+      });
+    } catch (error) {
+      setNotice({ type: 'error', text: error.message || 'Não foi possível salvar seu perfil.' });
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
-  const updatePassword = (event) => {
+  const updatePassword = async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
-    if (form.elements.newPassword.value !== form.elements.confirmPassword.value) {
+    const currentPassword = form.elements.currentPassword.value;
+    const password = form.elements.newPassword.value;
+    if (password.length < 8) {
+      setNotice({ type: 'error', text: 'A nova senha deve ter pelo menos 8 caracteres.' });
+      return;
+    }
+    if (password !== form.elements.confirmPassword.value) {
       setNotice({ type: 'error', text: 'A nova senha e a confirmação não são iguais.' });
       return;
     }
-    event.currentTarget.reset();
-    setNotice({ type: 'success', text: 'Senha atualizada somente nesta demonstração.' });
+
+    setPasswordSaving(true);
+    setNotice('');
+    try {
+      const response = await authorizedFetch('/api/me/password', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, password })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Não foi possível atualizar sua senha.');
+      form.reset();
+      setNotice({ type: 'success', text: 'Senha atualizada com sucesso.' });
+    } catch (error) {
+      setNotice({ type: 'error', text: error.message || 'Não foi possível atualizar sua senha.' });
+    } finally {
+      setPasswordSaving(false);
+    }
   };
 
   return (
@@ -120,7 +188,7 @@ export default function perfilScreen() {
                 </button>
                 <span>Minha conta</span>
               </div>
-              <span className="profile-demo-tag">Modo demonstração</span>
+              <span className="profile-demo-tag">{roleLabel(userProfile?.role)}</span>
             </header>
 
             <div className="profile-content">
@@ -166,7 +234,7 @@ export default function perfilScreen() {
                 </div>
                 <div className="profile-identity-copy">
                   <h2>{profile.name}</h2>
-                  <p>{profile.email} · Gerente</p>
+                  <p>{profile.email} · {roleLabel(userProfile?.role)}</p>
                 </div>
                 <span className="profile-status"><span /> Conta ativa</span>
               </section>
@@ -205,20 +273,14 @@ export default function perfilScreen() {
                     </label>
                     <label>
                       Telefone
-                      <input
-                        name="phone"
-                        type="tel"
-                        value={profileDraft.phone}
-                        onChange={(event) => setProfileDraft((current) => ({ ...current, phone: event.target.value }))}
-                        autoComplete="tel"
-                      />
+                      <input value="Não informado" readOnly />
                     </label>
                     <label>
                       Cargo
-                      <input value="Gerente" readOnly />
+                      <input value={roleLabel(userProfile?.role)} readOnly />
                     </label>
                     <div className="profile-form-actions">
-                      <button type="submit" className="profile-primary-button">Salvar alterações</button>
+                      <button type="submit" className="profile-primary-button" disabled={profileSaving}>{profileSaving ? 'Salvando...' : 'Salvar alterações'}</button>
                     </div>
                   </form>
                 </section>
@@ -231,19 +293,19 @@ export default function perfilScreen() {
                   <form className="profile-form" onSubmit={updatePassword}>
                     <label>
                       Senha atual
-                      <input type="password" name="currentPassword" placeholder="Digite sua senha atual" required minLength="6" autoComplete="current-password" />
+                      <input type="password" name="currentPassword" placeholder="Digite sua senha atual" required minLength="8" autoComplete="current-password" />
                     </label>
                     <label>
                       Nova senha
-                      <input type="password" name="newPassword" placeholder="Mínimo de 6 caracteres" required minLength="6" autoComplete="new-password" />
+                      <input type="password" name="newPassword" placeholder="Mínimo de 8 caracteres" required minLength="8" autoComplete="new-password" />
                     </label>
                     <label>
                       Confirmar nova senha
-                      <input type="password" name="confirmPassword" placeholder="Digite novamente a nova senha" required minLength="6" autoComplete="new-password" />
+                      <input type="password" name="confirmPassword" placeholder="Digite novamente a nova senha" required minLength="8" autoComplete="new-password" />
                     </label>
-                    <p className="profile-demo-help">A troca de senha é apenas visual nesta versão de demonstração.</p>
+                    <p className="profile-demo-help">A alteração da senha exige a senha atual. A alteração do e-mail pode exigir confirmação enviada pelo Supabase.</p>
                     <div className="profile-form-actions">
-                      <button type="submit" className="profile-secondary-button">Atualizar senha</button>
+                      <button type="submit" className="profile-secondary-button" disabled={passwordSaving}>{passwordSaving ? 'Atualizando...' : 'Atualizar senha'}</button>
                     </div>
                   </form>
                 </section>

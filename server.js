@@ -19,6 +19,25 @@ const FRONTEND_PATH = path.join(__dirname, 'dist');
 // ============================================================
 
 const supabaseUrl = process.env.SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+function isServiceRoleKey(key) {
+    if (key.startsWith('sb_secret_')) {
+        return true;
+    }
+    if (!key.startsWith('eyJ')) {
+        return false;
+    }
+
+    try {
+        const claims = JSON.parse(Buffer.from(key.split('.')[1], 'base64url').toString('utf8'));
+        return claims.role === 'service_role';
+    } catch {
+        return false;
+    }
+}
+
+const hasServiceRoleKey = isServiceRoleKey(serviceRoleKey);
 
 // A chave secreta deve ficar exclusivamente no backend.
 // Não coloque essa chave em arquivos JavaScript do navegador.
@@ -37,8 +56,8 @@ const supabase =
         : null;
 
 const supabaseAdmin =
-    supabaseUrl && process.env.SUPABASE_SERVICE_ROLE_KEY
-        ? createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    supabaseUrl && hasServiceRoleKey
+        ? createClient(supabaseUrl, serviceRoleKey, {
               auth: {
                   autoRefreshToken: false,
                   persistSession: false
@@ -263,9 +282,14 @@ function exigirSupabase(req, res, next) {
 }
 
 function exigirSupabaseAdmin(req, res, next) {
-    if (!supabaseAdmin) {
+    if (!supabaseUrl) {
         return res.status(503).json({
-            error: 'O cadastro de colaboradores requer SUPABASE_SERVICE_ROLE_KEY configurada somente no backend.'
+            error: 'SUPABASE_URL não está configurada no servidor.'
+        });
+    }
+    if (!hasServiceRoleKey) {
+        return res.status(503).json({
+            error: 'O cadastro de contas requer uma chave secreta Supabase (sb_secret_...) ou legacy service_role em SUPABASE_SERVICE_ROLE_KEY. A chave publishable/anon não tem permissão administrativa.'
         });
     }
 
@@ -290,10 +314,11 @@ async function exigirUsuario(req, res, next) {
         }
 
         const appMetadata = user.app_metadata || {};
-        if (!['admin', 'cashier'].includes(appMetadata.role) || appMetadata.is_active === false) {
+        if (!['admin', 'cashier', 'product_clerk', 'cashier_product'].includes(appMetadata.role) || appMetadata.is_active === false) {
             return res.status(403).json({ error: 'Esta conta não possui acesso ativo ao sistema.' });
         }
 
+        req.authToken = token;
         req.authUser = user;
         req.userProfile = {
             id: user.id,
@@ -321,6 +346,162 @@ function exigirPapel(...roles) {
         return next();
     };
 }
+
+function exigirAcessoPdv(req, res, next) {
+    return exigirPapel('admin', 'cashier', 'cashier_product')(req, res, next);
+}
+
+function exigirTurnosConfigurados(req, res, next) {
+    if (!hasServiceRoleKey || !supabaseAdmin) {
+        return res.status(503).json({
+            error: 'A abertura de caixas requer SUPABASE_SERVICE_ROLE_KEY configurada no servidor.'
+        });
+    }
+    return next();
+}
+
+function responderErroTurnos(res, error) {
+    console.error('Erro no controle de turnos do PDV.', error);
+    if (error.code === '42P01' || error.code === 'PGRST205') {
+        return res.status(503).json({
+            error: 'A tabela public.pdv_shifts não existe. Execute supabase/pdv-shifts.sql no SQL Editor do Supabase.'
+        });
+    }
+    if (error.code === '23505') {
+        return res.status(409).json({
+            error: 'Este caixa ou operador já possui um turno aberto. Atualize os turnos e tente novamente.'
+        });
+    }
+    return res.status(500).json({ error: 'Não foi possível concluir a operação do caixa.' });
+}
+
+function valorDeCaixaValido(valor) {
+    return typeof valor === 'number' &&
+        Number.isFinite(valor) &&
+        valor >= 0 &&
+        valor <= 9999999999.99 &&
+        Math.abs(valor * 100 - Math.round(valor * 100)) < 1e-7;
+}
+
+app.get(
+    '/api/pdv/shifts',
+    exigirSupabase,
+    exigirUsuario,
+    exigirAcessoPdv,
+    exigirTurnosConfigurados,
+    async (req, res) => {
+        const { data: shifts, error } = await supabaseAdmin
+            .from('pdv_shifts')
+            .select('id, register_number, operator_id, operator_name, operator_role, opened_at, opening_cash')
+            .is('closed_at', null)
+            .order('opened_at', { ascending: true });
+
+        if (error) {
+            return responderErroTurnos(res, error);
+        }
+
+        const openShifts = shifts || [];
+        return res.json({
+            current: openShifts.find((shift) => shift.operator_id === req.authUser.id) || null,
+            registers: [1, 2].map((registerNumber) => {
+                const shift = openShifts.find((item) => item.register_number === registerNumber);
+                return {
+                    register_number: registerNumber,
+                    occupied: Boolean(shift),
+                    operator_name: shift?.operator_name || null,
+                    opened_at: shift?.opened_at || null
+                };
+            })
+        });
+    }
+);
+
+app.post(
+    '/api/pdv/shifts',
+    exigirSupabase,
+    exigirUsuario,
+    exigirAcessoPdv,
+    exigirTurnosConfigurados,
+    async (req, res) => {
+        const registerNumber = req.body?.registerNumber;
+        const openingCash = req.body?.openingCash;
+        if (![1, 2].includes(registerNumber)) {
+            return res.status(400).json({ error: 'Selecione o Caixa 1 ou o Caixa 2.' });
+        }
+        if (!valorDeCaixaValido(openingCash)) {
+            return res.status(400).json({ error: 'Informe um valor inicial válido, igual ou maior que zero.' });
+        }
+
+        const { data: existing, error: lookupError } = await supabaseAdmin
+            .from('pdv_shifts')
+            .select('id')
+            .is('closed_at', null)
+            .or(`register_number.eq.${registerNumber},operator_id.eq.${req.authUser.id}`)
+            .limit(1);
+        if (lookupError) {
+            return responderErroTurnos(res, lookupError);
+        }
+        if (existing?.length) {
+            return res.status(409).json({ error: 'Esse caixa ou operador já tem um turno aberto. Atualize a lista antes de continuar.' });
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from('pdv_shifts')
+            .insert({
+                register_number: registerNumber,
+                operator_id: req.authUser.id,
+                operator_name: req.userProfile.full_name,
+                operator_role: req.userProfile.role,
+                opening_cash: openingCash
+            })
+            .select('id, register_number, operator_id, operator_name, operator_role, opened_at, opening_cash')
+            .single();
+
+        if (error) {
+            if (error.code === '23505') {
+                return res.status(409).json({ error: 'Outro operador acabou de abrir esse caixa. Atualize a lista e escolha o outro.' });
+            }
+            return responderErroTurnos(res, error);
+        }
+
+        return res.status(201).json({ data });
+    }
+);
+
+app.patch(
+    '/api/pdv/shifts/:id/close',
+    exigirSupabase,
+    exigirUsuario,
+    exigirAcessoPdv,
+    exigirTurnosConfigurados,
+    async (req, res) => {
+        const closingCash = req.body?.closingCash;
+        if (!valorDeCaixaValido(closingCash)) {
+            return res.status(400).json({ error: 'Informe o valor contado no fechamento, igual ou maior que zero.' });
+        }
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.params.id)) {
+            return res.status(400).json({ error: 'Identificador de turno inválido.' });
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from('pdv_shifts')
+            .update({ closing_cash: closingCash, closed_at: new Date().toISOString() })
+            .eq('id', req.params.id)
+            .eq('operator_id', req.authUser.id)
+            .is('closed_at', null)
+            .select('id, register_number, operator_id, operator_name, operator_role, opened_at, opening_cash, closed_at, closing_cash')
+            .maybeSingle();
+
+        if (error) {
+            return responderErroTurnos(res, error);
+        }
+        if (!data) {
+            return res.status(404).json({ error: 'O turno não está mais aberto ou pertence a outro operador.' });
+        }
+
+        return res.json({ data });
+    }
+);
 
 app.post('/api/auth/login', exigirSupabase, async (req, res) => {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
@@ -375,25 +556,124 @@ app.get('/api/me', exigirSupabase, exigirUsuario, (req, res) => {
     res.json({ user: req.userProfile });
 });
 
-app.patch('/api/me/password', exigirSupabaseAdmin, exigirUsuario, async (req, res) => {
+app.patch('/api/me/profile', exigirSupabase, exigirUsuario, async (req, res) => {
+    const fullName = typeof req.body?.fullName === 'string' ? req.body.fullName.trim() : '';
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    if (fullName.length < 2 || fullName.length > 120) {
+        return res.status(400).json({ error: 'Informe um nome de 2 a 120 caracteres.' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Informe um e-mail válido.' });
+    }
+
+    try {
+        const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+            method: 'PUT',
+            headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${req.authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email === req.authUser.email?.toLowerCase() ? undefined : email,
+                data: { ...req.authUser.user_metadata, full_name: fullName }
+            })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            if (response.status === 422 || response.status === 409) {
+                return res.status(400).json({ error: 'Não foi possível atualizar o perfil. Verifique o e-mail e tente novamente.' });
+            }
+            console.error('Supabase não aceitou a atualização do perfil.', { status: response.status, code: result.code });
+            return res.status(502).json({ error: 'Não foi possível atualizar o perfil no Supabase.' });
+        }
+
+        const emailChangePending = Boolean(result.new_email);
+        return res.json({
+            user: {
+                ...req.userProfile,
+                full_name: fullName,
+                email: result.new_email ? req.userProfile.email : result.email || req.userProfile.email
+            },
+            emailChangePending,
+            requestedEmail: emailChangePending ? email : null
+        });
+    } catch (error) {
+        console.error('Falha ao atualizar o perfil do usuário.', error);
+        return res.status(502).json({ error: 'Não foi possível comunicar com o Supabase para atualizar o perfil.' });
+    }
+});
+
+app.patch('/api/me/password', exigirSupabase, exigirUsuario, async (req, res) => {
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
     if (password.length < 8) {
         return res.status(400).json({ error: 'A nova senha deve ter pelo menos 8 caracteres.' });
     }
-
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(req.authUser.id, {
-        password,
-        app_metadata: {
-            ...req.authUser.app_metadata,
-            must_change_password: false
-        }
-    });
-    if (error) {
-        console.error('Não foi possível concluir a atualização da conta.', error);
-        return res.status(400).json({ error: 'Não foi possível atualizar a senha. Verifique os requisitos e tente novamente.' });
+    if (req.userProfile.must_change_password && !hasServiceRoleKey) {
+        return res.status(503).json({
+            error: 'A troca obrigatória da senha inicial requer SUPABASE_SERVICE_ROLE_KEY configurada no backend.'
+        });
     }
 
-    return res.json({ message: 'Senha atualizada.' });
+    const currentPassword = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : '';
+    if (!req.userProfile.must_change_password) {
+        if (!currentPassword) {
+            return res.status(400).json({ error: 'Informe sua senha atual para confirmar a alteração.' });
+        }
+
+        try {
+            const verification = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+                method: 'POST',
+                headers: { apikey: supabaseKey, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: req.authUser.email, password: currentPassword })
+            });
+            if (verification.status === 400 || verification.status === 401) {
+                return res.status(401).json({ error: 'A senha atual está incorreta.' });
+            }
+            if (!verification.ok) {
+                console.error('Falha ao confirmar a senha atual.', { status: verification.status });
+                return res.status(502).json({ error: 'Não foi possível confirmar sua senha atual no Supabase.' });
+            }
+        } catch (error) {
+            console.error('Falha ao confirmar a senha atual.', error);
+            return res.status(502).json({ error: 'Não foi possível comunicar com o Supabase para confirmar sua senha.' });
+        }
+    }
+
+    try {
+        const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+            method: 'PUT',
+            headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${req.authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            console.error('Supabase não aceitou a atualização da senha.', { status: response.status, code: result.code });
+            return res.status(400).json({ error: 'Não foi possível atualizar a senha. Verifique os requisitos e tente novamente.' });
+        }
+
+        if (req.userProfile.must_change_password && hasServiceRoleKey && supabaseAdmin) {
+            const { error } = await supabaseAdmin.auth.admin.updateUserById(req.authUser.id, {
+                app_metadata: {
+                    ...req.authUser.app_metadata,
+                    must_change_password: false
+                }
+            });
+            if (error) {
+                console.error('Senha atualizada, mas não foi possível remover a exigência de troca inicial.', error);
+                return res.status(500).json({ error: 'A senha foi atualizada, mas a configuração inicial da conta não foi concluída. Procure o administrador.' });
+            }
+        }
+
+        return res.json({ message: 'Senha atualizada.' });
+    } catch (error) {
+        console.error('Falha ao atualizar a senha do usuário.', error);
+        return res.status(502).json({ error: 'Não foi possível comunicar com o Supabase para atualizar a senha.' });
+    }
 });
 
 app.get(
@@ -410,12 +690,12 @@ app.get(
                 return res.status(500).json({ error: 'Não foi possível carregar os colaboradores.' });
             }
             collaborators.push(...data.users
-                .filter((user) => user.app_metadata?.role === 'cashier')
+                .filter((user) => ['admin', 'cashier', 'product_clerk', 'cashier_product'].includes(user.app_metadata?.role))
                 .map((user) => ({
                     id: user.id,
                     full_name: user.user_metadata?.full_name || user.email,
                     email: user.email,
-                    role: 'cashier',
+                    role: user.app_metadata.role,
                     is_active: user.app_metadata?.is_active !== false,
                     created_at: user.created_at
                 })));
@@ -441,6 +721,7 @@ app.post(
         const fullName = typeof req.body?.fullName === 'string' ? req.body.fullName.trim() : '';
         const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
         const password = typeof req.body?.password === 'string' ? req.body.password : '';
+        const role = req.body?.role;
 
         if (fullName.length < 2 || fullName.length > 120) {
             return res.status(400).json({ error: 'Informe um nome de 2 a 120 caracteres.' });
@@ -451,6 +732,9 @@ app.post(
         if (password.length < 8) {
             return res.status(400).json({ error: 'A senha inicial deve ter pelo menos 8 caracteres.' });
         }
+        if (!['admin', 'cashier', 'product_clerk', 'cashier_product'].includes(role)) {
+            return res.status(400).json({ error: 'Selecione um cargo válido para esta conta.' });
+        }
 
         const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email,
@@ -458,17 +742,23 @@ app.post(
             email_confirm: true,
             user_metadata: { full_name: fullName },
             app_metadata: {
-                role: 'cashier',
+                role,
                 is_active: true,
                 must_change_password: true
             }
         });
         if (createError || !created.user) {
-            if (createError?.code === 'email_exists') {
+            if (['email_exists', 'user_already_exists'].includes(createError?.code)) {
                 return res.status(409).json({ error: 'Já existe uma conta com este e-mail.' });
             }
+            if (createError?.code === 'weak_password') {
+                return res.status(400).json({ error: 'A senha não atende aos requisitos de segurança configurados no Supabase. Escolha uma senha mais forte.' });
+            }
+            if (createError?.code === 'email_address_invalid') {
+                return res.status(400).json({ error: 'O Supabase rejeitou o formato do e-mail informado.' });
+            }
             console.error('Não foi possível criar a conta do colaborador.', createError);
-            return res.status(400).json({ error: 'Não foi possível criar a conta. Confira o e-mail e a senha inicial.' });
+            return res.status(502).json({ error: 'O Supabase não conseguiu criar a conta. Confira se a chave secreta do servidor e as configurações de Authentication pertencem ao projeto correto.' });
         }
 
         return res.status(201).json({
@@ -476,7 +766,7 @@ app.post(
                 id: created.user.id,
                 full_name: fullName,
                 email,
-                role: 'cashier',
+                role,
                 is_active: true,
                 created_at: created.user.created_at
             }
@@ -504,25 +794,43 @@ app.patch(
         const { data: current, error: lookupError } = await supabaseAdmin.auth.admin.getUserById(req.params.id);
         if (lookupError) {
             console.error('Não foi possível consultar o colaborador.', lookupError);
-            return res.status(500).json({ error: 'Não foi possível atualizar o acesso do colaborador.' });
+            return res.status(500).json({ error: 'Não foi possível atualizar o acesso deste usuário.' });
         }
-        if (!current.user || current.user.app_metadata?.role !== 'cashier') {
-            return res.status(404).json({ error: 'Colaborador não encontrado.' });
+        const currentRole = current.user?.app_metadata?.role;
+        if (!current.user || !['admin', 'cashier', 'product_clerk', 'cashier_product'].includes(currentRole)) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+        if (currentRole === 'admin' && !isActive) {
+            let activeAdmins = 0;
+            for (let page = 1; page <= 20; page += 1) {
+                const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+                if (error) {
+                    console.error('Não foi possível verificar administradores ativos.', error);
+                    return res.status(500).json({ error: 'Não foi possível verificar se há outro administrador ativo.' });
+                }
+                activeAdmins += data.users.filter((user) =>
+                    user.app_metadata?.role === 'admin' && user.app_metadata?.is_active !== false
+                ).length;
+                if (data.users.length < 1000) break;
+            }
+            if (activeAdmins <= 1) {
+                return res.status(409).json({ error: 'Não é possível desativar o último administrador ativo.' });
+            }
         }
 
         const { data: updated, error } = await supabaseAdmin.auth.admin.updateUserById(req.params.id, {
             app_metadata: { ...current.user.app_metadata, is_active: isActive }
         });
         if (error) {
-            console.error('Não foi possível atualizar o acesso do colaborador.', error);
-            return res.status(500).json({ error: 'Não foi possível atualizar o acesso do colaborador.' });
+            console.error('Não foi possível atualizar o acesso do usuário.', error);
+            return res.status(500).json({ error: 'Não foi possível atualizar o acesso deste usuário.' });
         }
         return res.json({
             data: {
                 id: updated.user.id,
                 full_name: updated.user.user_metadata?.full_name || updated.user.email,
                 email: updated.user.email,
-                role: 'cashier',
+                role: currentRole,
                 is_active: isActive,
                 created_at: updated.user.created_at
             }
@@ -539,7 +847,7 @@ app.patch(
 // /api/products?active=all
 // ============================================================
 
-app.get('/api/products', exigirSupabase, exigirUsuario, exigirPapel('admin', 'cashier'), async (req, res) => {
+app.get('/api/products', exigirSupabase, exigirUsuario, exigirPapel('admin', 'cashier', 'product_clerk', 'cashier_product'), async (req, res) => {
     try {
         let consulta = supabase
             .from('produtos')
@@ -592,7 +900,7 @@ app.get('/api/products', exigirSupabase, exigirUsuario, exigirPapel('admin', 'ca
 // GET /api/products/:id
 // ============================================================
 
-app.get('/api/products/:id', exigirSupabase, exigirUsuario, exigirPapel('admin', 'cashier'), async (req, res) => {
+app.get('/api/products/:id', exigirSupabase, exigirUsuario, exigirPapel('admin', 'cashier', 'product_clerk', 'cashier_product'), async (req, res) => {
     const id = Number(req.params.id);
 
     if (!Number.isSafeInteger(id) || id <= 0) {
@@ -625,7 +933,7 @@ app.get('/api/products/:id', exigirSupabase, exigirUsuario, exigirPapel('admin',
 // POST /api/products
 // ============================================================
 
-app.post('/api/products', exigirSupabase, exigirUsuario, exigirPapel('admin'), async (req, res) => {
+app.post('/api/products', exigirSupabase, exigirUsuario, exigirPapel('admin', 'product_clerk', 'cashier_product'), async (req, res) => {
     let produto;
 
     try {

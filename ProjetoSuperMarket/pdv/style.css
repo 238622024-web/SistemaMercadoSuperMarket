@@ -1118,4 +1118,172 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
       }
-    
+
+      .pdv-shift-page {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow-y: auto;
+        padding: 24px;
+        background: #f1f5f9;
+      }
+
+      .pdv-shift-card {
+        width: min(100%, 560px);
+        padding: 32px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+      }
+
+      .pdv-shift-card h1 {
+        margin-bottom: 8px;
+        color: #0f172a;
+        font-size: 24px;
+      }
+
+      .pdv-shift-card > p {
+        margin-bottom: 20px;
+        color: #475569;
+        line-height: 1.5;
+      }
+
+      .pdv-register-list {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+
+      .pdv-register {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        background: #f0fdf4;
+        color: #166534;
+      }
+
+      .pdv-register > div {
+        display: grid;
+        gap: 4px;
+      }
+
+      .pdv-register.occupied {
+        border-color: #fed7aa;
+        background: #fff7ed;
+        color: #9a3412;
+      }
+
+      .pdv-open-shift,
+      .pdv-close-shift {
+        display: grid;
+        gap: 9px;
+      }
+
+      .pdv-open-shift label,
+      .pdv-close-shift label {
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .pdv-open-shift input,
+      .pdv-open-shift select,
+      .pdv-close-shift input {
+        width: 100%;
+        min-height: 44px;
+        margin-bottom: 8px;
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        color: #0f172a;
+        background: #fff;
+      }
+
+      .pdv-open-shift button,
+      .pdv-close-shift button,
+      .pdv-refresh-button {
+        min-height: 42px;
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .pdv-open-shift button:disabled,
+      .pdv-close-shift button:disabled,
+      .pdv-refresh-button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .pdv-refresh-button {
+        width: 100%;
+        margin-top: 12px;
+        background: #475569;
+      }
+
+      .pdv-shift-error {
+        grid-column: 1 / -1;
+        color: #b91c1c;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .pdv-shift-banner {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 14px 18px;
+        background: #eff6ff;
+        border-bottom: 1px solid #bfdbfe;
+        color: #1e3a8a;
+      }
+
+      .pdv-shift-banner > div:first-child {
+        display: grid;
+        gap: 4px;
+      }
+
+      .pdv-container.has-active-shift {
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+
+      .pdv-close-shift {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        min-width: min(420px, 50%);
+      }
+
+      .pdv-close-shift label {
+        grid-column: 1 / -1;
+      }
+
+      .pdv-close-shift input {
+        margin: 0;
+      }
+
+      @media (max-width: 700px) {
+        .pdv-shift-banner {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .pdv-close-shift {
+          min-width: 0;
+        }
+
+        .pdv-shift-card {
+          padding: 24px;
+        }
+      }

@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, useLocation, useNavigate } from 'react-router-
 import './styles.css';
 import { authClient, authorizedFetch } from './auth.js';
 import { AuthContext } from './authContext.js';
+import { ROLE_ROUTES, roleLabel } from './roles.js';
 
 const screens = {
   login: lazy(() => import('./screens/index.jsx')),
@@ -151,22 +152,6 @@ function Application() {
 
   useEffect(() => {
     if (name !== 'pdv') return undefined;
-    const started = Date.now();
-    const updateSession = () => {
-      const elapsed = Math.floor((Date.now() - started) / 1000);
-      const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-      const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-      const seconds = String(elapsed % 60).padStart(2, '0');
-      const clock = document.getElementById('sessionTime');
-      if (clock) clock.textContent = `${hours}:${minutes}:${seconds}`;
-    };
-    updateSession();
-    const interval = window.setInterval(updateSession, 1000);
-    return () => window.clearInterval(interval);
-  }, [name]);
-
-  useEffect(() => {
-    if (name !== 'pdv') return undefined;
     const keyboard = (event) => {
       if (event.key === 'Escape') document.getElementById('searchInput')?.focus();
       if (event.key === 'F4') {
@@ -206,7 +191,8 @@ function Application() {
         throw new Error('Esta conta não está cadastrada ou está desativada. Procure o administrador.');
       }
       setMessage(null);
-      navigate(profile.role === 'cashier' ? '/pdv' : '/dashboard');
+      navigate(profile.role === 'product_clerk' ? '/adicionar-produto' :
+        ROLE_ROUTES[profile.role]?.includes('pdv') ? '/pdv' : '/dashboard');
     } catch (error) {
       setMessage({ text: error.message || 'Não foi possível entrar. Confira seu e-mail e senha.', type: 'error' });
     } finally {
@@ -596,10 +582,12 @@ function Application() {
     }
   };
 
-  const allowedCashierRoutes = new Set(['pdv', 'etiqueta-gondola', 'perfil']);
+  const allowedRoleRoutes = ROLE_ROUTES[userProfile?.role];
   const isLoggedIn = Boolean(userProfile && session);
   const isLoginScreen = name === 'login';
-  const allowedForRole = userProfile?.role === 'admin' || allowedCashierRoutes.has(name);
+  const allowedForRole = userProfile?.role === 'admin' || Boolean(allowedRoleRoutes?.includes(name));
+  const defaultRoute = userProfile?.role === 'product_clerk' ? '/adicionar-produto' :
+    allowedRoleRoutes?.includes('pdv') ? '/pdv' : '/dashboard';
 
   return (
     <div
@@ -634,6 +622,7 @@ function Application() {
     >
       <AuthContext.Provider value={{
         userProfile,
+        updateUserProfile: (profile) => setUserProfile(profile),
         signOut: () => authClient?.auth.signOut()
       }}>
       {authLoading ? (
@@ -646,7 +635,7 @@ function Application() {
       ) : !isLoggedIn && !isLoginScreen ? (
         <Navigate to="/index" replace />
       ) : isLoggedIn && isLoginScreen ? (
-        <Navigate to={userProfile.role === 'cashier' ? '/pdv' : '/dashboard'} replace />
+        <Navigate to={defaultRoute} replace />
       ) : isLoggedIn && userProfile.must_change_password ? (
         <section className="initial-password" aria-labelledby="initialPasswordTitle">
           <form onSubmit={changeInitialPassword}>

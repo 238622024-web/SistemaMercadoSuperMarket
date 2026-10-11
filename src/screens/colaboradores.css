@@ -94,7 +94,8 @@
   font-weight: 600;
 }
 
-.collaborator-form input {
+.collaborator-form input,
+.collaborator-form select {
   box-sizing: border-box;
   width: 100%;
   min-height: 42px;

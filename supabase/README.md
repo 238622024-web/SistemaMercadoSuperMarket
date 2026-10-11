@@ -32,6 +32,21 @@ Não coloque a chave privada em código de navegador, em uma variável `VITE_*`,
 
 ## Colaboradores
 
-Depois de entrar como administradora, abra **Sistema > Colaboradores** para criar contas de caixa. O colaborador recebe o papel `cashier`, começa com uma senha temporária e precisa trocá-la no primeiro acesso. Esse papel permite abrir somente **PDV**, **Etiqueta de Gôndola** e **Meu Perfil**. O backend também verifica as permissões.
+Depois de entrar como administradora, abra **Sistema > Colaboradores** e selecione o cargo adequado:
+
+- `admin` (Administrador): acesso completo;
+- `cashier` (Operador de Caixa): PDV, consulta de produtos, etiquetas e perfil;
+- `product_clerk` (Cadastro de Produtos): cadastrar produtos novos, consultar produtos, etiquetas e perfil;
+- `cashier_product` (Caixa e Produtos): PDV, cadastro e consulta de produtos, etiquetas e perfil.
+
+Nenhum cargo operacional pode editar ou desativar produtos já existentes. Contas novas começam com uma senha temporária e precisam trocá-la no primeiro acesso. O backend verifica as permissões e impede desativar o último administrador ativo.
+
+Em **Meu Perfil**, qualquer usuário ativo pode salvar o nome, pedir a alteração do e-mail e alterar a senha informando a senha atual. A alteração de e-mail segue as opções de confirmação habilitadas em **Authentication > Settings** no Supabase; quando houver confirmação pendente, o endereço anterior continua válido até a confirmação.
+
+## Turnos dos caixas do PDV
+
+Para controlar os dois caixas, entre em **SQL Editor > New query** no Supabase e execute o conteúdo de [`pdv-shifts.sql`](./pdv-shifts.sql). A tabela guarda o operador, o cargo, os horários e os valores de abertura e fechamento. O banco impede que o mesmo operador ou caixa tenha mais de um turno aberto ao mesmo tempo.
+
+Mantenha `SUPABASE_SERVICE_ROLE_KEY` configurada apenas no backend: a API usa essa chave para registrar os turnos com segurança. No PDV, cada operador abre o Caixa 1 ou 2 informando o fundo inicial; ao terminar, informa o valor contado para fechar o turno.
 
 Em produção, publique o sistema somente por HTTPS.

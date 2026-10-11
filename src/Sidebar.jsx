@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PROFILE_PHOTO_STORAGE_KEY, PROFILE_PHOTO_UPDATED_EVENT } from './profilePhoto.js';
 import { AuthContext } from './authContext.js';
+import { ROLE_ROUTES, roleLabel } from './roles.js';
 
 const groups = [
   {
@@ -77,7 +78,8 @@ export default function Sidebar({ activeRoute }) {
       const [label, route, icon, children] = item;
       if (userProfile?.role === 'admin') return [item];
       if (!children) return [];
-      const allowedChildren = children.filter((child) => ['pdv', 'etiqueta-gondola'].includes(child[1]));
+      const allowedRoutes = ROLE_ROUTES[userProfile?.role] || [];
+      const allowedChildren = children.filter((child) => allowedRoutes.includes(child[1]));
       return allowedChildren.length ? [[label, route, icon, allowedChildren]] : [];
     })
   })).filter((group) => group.links.length);
@@ -219,7 +221,7 @@ export default function Sidebar({ activeRoute }) {
           <div className="user-avatar">
             {profilePhoto ? <img src={profilePhoto} alt="" /> : 'A'}
           </div>
-          <div className="user-info"><span className="user-name">{userProfile?.full_name || 'Usuário'}</span><span className="user-role">{userProfile?.role === 'admin' ? 'Administrador' : 'Colaborador'}</span></div>
+          <div className="user-info"><span className="user-name">{userProfile?.full_name || 'Usuário'}</span><span className="user-role">{roleLabel(userProfile?.role)}</span></div>
           <span className="user-more" aria-hidden="true"><span /><span /><span /></span>
         </Link>
         <button
