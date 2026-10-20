@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ProductMarkup from './produtos.jsx';
 import { authorizedFetch } from '../auth.js';
+import { supplierApi } from '../supplierApi.js';
 
 const currency = (value) =>
   Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -36,6 +37,18 @@ export default function ProductsPage() {
   const [loadingError, setLoadingError] = useState('');
   const [checked, setChecked] = useState({});
   const [saving, setSaving] = useState(false);
+  const [supplierOptions, setSupplierOptions] = useState([]);
+  const [supplierLoadError, setSupplierLoadError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    supplierApi('/suppliers/options')
+      .then((result) => { if (active) setSupplierOptions(result.data || []); })
+      .catch((failure) => {
+        if (active) setSupplierLoadError(failure.message || 'Não foi possível carregar os fornecedores.');
+      });
+    return () => { active = false; };
+  }, []);
 
   const loadProducts = useCallback(async (query = search) => {
     setLoadingError('');
@@ -195,6 +208,8 @@ export default function ProductsPage() {
         setChecked(Object.fromEntries(products.map((product) => [product.id, checkedAll])));
       }}
       product={selected}
+      supplierOptions={supplierOptions}
+      supplierLoadError={supplierLoadError}
       details={details}
       detailHidden={!selected}
       editing={editing}

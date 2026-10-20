@@ -277,12 +277,12 @@ export default function produtosScreen(props) {
             </label>
             <label className="product-edit-field">
               Fornecedor
-              <select name="fornecedor" defaultValue={props.product?.["fornecedor"] ?? ''}>{props.product?.fornecedor && !['fornecedor1', 'fornecedor2', 'fornecedor3'].includes(props.product.fornecedor) && <option value={props.product.fornecedor}>{props.product.fornecedor}</option>}
+              <select name="fornecedor" defaultValue={props.product?.["fornecedor"] ?? ''}>
                 <option value="">Selecione um fornecedor</option>
-                <option value="fornecedor1">Distribuidora ABC</option>
-                <option value="fornecedor2">Atacado XYZ</option>
-                <option value="fornecedor3">Fornecedor Central</option>
+                {props.product?.fornecedor && !props.supplierOptions?.some((supplier) => supplier.nome === props.product.fornecedor) && <option value={props.product.fornecedor}>{props.product.fornecedor}</option>}
+                {props.supplierOptions?.map((supplier) => <option key={supplier.id} value={supplier.nome}>{supplier.nome}</option>)}
               </select>
+              {props.supplierLoadError && <small className="product-edit-error">{props.supplierLoadError}</small>}
             </label>
             <label className="product-edit-field">
               Data de validade

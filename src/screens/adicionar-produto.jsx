@@ -1,7 +1,21 @@
+import { useEffect, useState } from 'react';
 import pageCss from '../../ProjetoSuperMarket/adicionar-produto/style.css?inline';
 import sidebarCss from "../../ProjetoSuperMarket/sidebar.css?inline";
 import Sidebar from "../Sidebar.jsx";
+import { supplierApi } from '../supplierApi.js';
 export default function adicionar_produtoScreen(props) {
+  const [supplierOptions, setSupplierOptions] = useState([]);
+  const [supplierLoadError, setSupplierLoadError] = useState('');
+  useEffect(() => {
+    let active = true;
+    supplierApi('/suppliers/options')
+      .then((result) => { if (active) setSupplierOptions(result.data || []); })
+      .catch((error) => {
+        if (active) setSupplierLoadError(error.message || 'Não foi possível carregar os fornecedores.');
+      });
+    return () => { active = false; };
+  }, []);
+
   return <><style>{pageCss}</style><style>{sidebarCss}</style><div className="legacy-screen">
     <div className="app-container">
       
@@ -128,10 +142,9 @@ export default function adicionar_produtoScreen(props) {
                   <label className="form-label" htmlFor="productSupplier">Fornecedor</label>
                   <select id="productSupplier" className="form-select">
                     <option value="">Selecione um fornecedor</option>
-                    <option value="fornecedor1">Distribuidora ABC</option>
-                    <option value="fornecedor2">Atacado XYZ</option>
-                    <option value="fornecedor3">Fornecedor Central</option>
+                    {supplierOptions.map((supplier) => <option key={supplier.id} value={supplier.nome}>{supplier.nome}</option>)}
                   </select>
+                  {supplierLoadError && <span className="form-hint" role="alert">{supplierLoadError}</span>}
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="productValidity">Data de Validade</label>

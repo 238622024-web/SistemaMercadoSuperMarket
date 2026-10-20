@@ -7,12 +7,17 @@
 require('dotenv').config();
 
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
+const { randomUUID } = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const FRONTEND_PATH = path.join(__dirname, 'dist');
+const FRONTEND_INDEX = path.join(FRONTEND_PATH, 'index.html');
+const EMAIL_FIELDS = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_FROM'];
 
 // ============================================================
 // CONFIGURAÇÃO DO SUPABASE
@@ -228,6 +233,135 @@ function normalizarProduto(body, parcial = false) {
     return produto;
 }
 
+function normalizarFornecedor(body, parcial = false) {
+    const entrada = body || {};
+    const fornecedor = {};
+    const camposTexto = [
+        ['nome', 'Nome', 2, 160],
+        ['razao_social', 'Razão social', 0, 180],
+        ['cnpj', 'CNPJ', 0, 18],
+        ['categoria', 'Categoria', 0, 80],
+        ['contato', 'Pessoa de contato', 0, 120],
+        ['telefone', 'Telefone', 0, 30],
+        ['email', 'E-mail', 0, 254],
+        ['endereco', 'Endereço', 0, 220],
+        ['cidade', 'Cidade', 0, 100],
+        ['estado', 'Estado', 0, 2],
+        ['cep', 'CEP', 0, 12],
+        ['observacoes', 'Observações', 0, 2000]
+    ];
+
+    for (const [campo, rotulo, minimo, maximo] of camposTexto) {
+        const valor = entrada[campo];
+        if (parcial && valor === undefined) continue;
+
+        const texto = valor === undefined || valor === null ? '' : String(valor).trim();
+        if (texto.length < minimo || texto.length > maximo) {
+            throw new Error(
+                `${rotulo}: informe ${minimo ? `de ${minimo} a ` : 'no máximo '}${maximo} caracteres.`
+            );
+        }
+        fornecedor[campo] = texto || null;
+    }
+
+    const email = fornecedor.email;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('Informe um endereço de e-mail válido.');
+    }
+
+    if (fornecedor.cnpj) {
+        const digitos = fornecedor.cnpj.replace(/\D/g, '');
+        if (digitos.length !== 14) {
+            throw new Error('O CNPJ deve conter 14 dígitos.');
+        }
+        fornecedor.cnpj = digitos;
+    }
+
+    if (fornecedor.estado && !/^[a-z]{2}$/i.test(fornecedor.estado)) {
+        throw new Error('Informe a sigla de estado com duas letras.');
+    }
+    if (fornecedor.estado) fornecedor.estado = fornecedor.estado.toUpperCase();
+
+    if (entrada.prazo_pagamento !== undefined || !parcial) {
+        const prazo = entrada.prazo_pagamento === '' || entrada.prazo_pagamento == null
+            ? 0
+            : Number(entrada.prazo_pagamento);
+        if (!Number.isInteger(prazo) || prazo < 0 || prazo > 365) {
+            throw new Error('O prazo de pagamento deve ser um número inteiro entre 0 e 365 dias.');
+        }
+        fornecedor.prazo_pagamento = prazo;
+    }
+
+    if (entrada.ativo !== undefined) {
+        if (typeof entrada.ativo !== 'boolean') {
+            throw new Error('O campo ativo deve ser verdadeiro ou falso.');
+        }
+        fornecedor.ativo = entrada.ativo;
+    } else if (!parcial) {
+        fornecedor.ativo = true;
+    }
+
+    return fornecedor;
+}
+
+function normalizarItensPedido(itens) {
+    if (!Array.isArray(itens) || itens.length < 1 || itens.length > 100) {
+        throw new Error('Adicione entre 1 e 100 itens ao pedido.');
+    }
+
+    let total = 0;
+    const normalizados = itens.map((item, index) => {
+        const nome = typeof item?.nome === 'string' ? item.nome.trim() : '';
+        const codigo = typeof item?.codigo === 'string' ? item.codigo.trim() : '';
+        const unidade = typeof item?.unidade === 'string' ? item.unidade.trim() : '';
+        const quantidade = Number(item?.quantidade);
+        const preco = Number(item?.preco_unitario);
+        if (!nome || nome.length > 160) {
+            throw new Error(`Informe o nome do item ${index + 1} (até 160 caracteres).`);
+        }
+        if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 1000000) {
+            throw new Error(`A quantidade do item ${index + 1} deve ser maior que zero.`);
+        }
+        if (!Number.isFinite(preco) || preco < 0 || preco > 999999999) {
+            throw new Error(`O preço do item ${index + 1} deve ser um valor válido.`);
+        }
+        const subtotal = Math.round(quantidade * preco * 100) / 100;
+        total += subtotal;
+        return {
+            nome,
+            codigo: codigo || null,
+            unidade: unidade || null,
+            quantidade,
+            preco_unitario: Math.round(preco * 100) / 100,
+            subtotal
+        };
+    });
+
+    if (!Number.isFinite(total) || total > 9999999999.99) {
+        throw new Error('O valor total do pedido excede o limite permitido.');
+    }
+    return { itens: normalizados, total: Math.round(total * 100) / 100 };
+}
+
+function escaparHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, (caractere) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[caractere]);
+}
+
+function dataIsoValida(valor) {
+    if (valor == null || valor === '') return null;
+    if (typeof valor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return undefined;
+    const data = new Date(`${valor}T00:00:00.000Z`);
+    return Number.isNaN(data.getTime()) || data.toISOString().slice(0, 10) !== valor
+        ? undefined
+        : valor;
+}
+
 // ============================================================
 // TRATAMENTO DE ERROS DO SUPABASE
 // ============================================================
@@ -271,6 +405,155 @@ function responderErroSupabase(res, error) {
     });
 }
 
+function responderErroFornecedores(res, error) {
+    console.error('Erro ao acessar dados de fornecedores/pedidos:', error);
+
+    if (error.code === '23505') {
+        if (!String(error.constraint || '').includes('suppliers_cnpj_unique')) {
+            return res.status(409).json({
+                error: 'Já existe um registro com estes dados. Atualize a lista e tente novamente.'
+            });
+        }
+        return res.status(409).json({
+            error: 'Já existe um fornecedor cadastrado com este CNPJ.'
+        });
+    }
+    if (error.code === '23503' || error.code === '23514' || error.code === '22P02' || error.code === '22007') {
+        return res.status(400).json({
+            error: 'Os dados enviados são inválidos ou fazem referência a um fornecedor inexistente.'
+        });
+    }
+    if (error.code === '42P01' || error.code === 'PGRST205') {
+        return res.status(503).json({
+            error: 'As tabelas de fornecedores ainda não foram criadas. Execute supabase/suppliers-purchase-orders.sql no SQL Editor do Supabase.'
+        });
+    }
+    if (error.code === '42501') {
+        return res.status(403).json({
+            error: 'O Supabase bloqueou o acesso. Verifique a SUPABASE_SERVICE_ROLE_KEY no servidor.'
+        });
+    }
+    return res.status(500).json({
+        error: 'Não foi possível concluir a operação de fornecedores/pedidos.'
+    });
+}
+
+function transporterEmail() {
+    const faltando = EMAIL_FIELDS.filter((campo) => !process.env[campo]);
+    if (faltando.length) {
+        throw new Error(`Configure no servidor: ${faltando.join(', ')}.`);
+    }
+
+    const port = Number(process.env.SMTP_PORT || 587);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error('SMTP_PORT deve ser uma porta válida.');
+    }
+
+    return nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port,
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASSWORD
+        }
+    });
+}
+
+async function enviarEmailPedido(pedido, fornecedor) {
+    if (!fornecedor.email) {
+        throw new Error('O fornecedor não possui e-mail cadastrado.');
+    }
+
+    const transporter = transporterEmail();
+    const itensHtml = pedido.itens.map((item) => `
+        <tr>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0">${escaparHtml(item.nome)}</td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0">${escaparHtml(item.codigo || '-')}</td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:right">${item.quantidade} ${escaparHtml(item.unidade || '')}</td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:right">R$ ${Number(item.preco_unitario).toFixed(2).replace('.', ',')}</td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:right">R$ ${Number(item.subtotal).toFixed(2).replace('.', ',')}</td>
+        </tr>
+    `).join('');
+    const entrega = pedido.data_entrega
+        ? `<p><strong>Previsão de entrega:</strong> ${escaparHtml(pedido.data_entrega)}</p>`
+        : '';
+    const observacoes = pedido.observacoes
+        ? `<p><strong>Observações:</strong><br>${escaparHtml(pedido.observacoes).replace(/\n/g, '<br>')}</p>`
+        : '';
+    const total = Number(pedido.total).toFixed(2).replace('.', ',');
+
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: fornecedor.email,
+        subject: `Pedido de compra ${pedido.numero} - SuperMarket`,
+        text: [
+            `Olá${fornecedor.contato ? `, ${fornecedor.contato}` : ''}!`,
+            `Segue o pedido de compra ${pedido.numero}.`,
+            `Total: R$ ${total}`,
+            pedido.data_entrega ? `Previsão de entrega: ${pedido.data_entrega}` : '',
+            pedido.observacoes ? `Observações: ${pedido.observacoes}` : ''
+        ].filter(Boolean).join('\n'),
+        html: `
+            <div style="font-family:Arial,sans-serif;color:#1e293b;max-width:720px;margin:0 auto">
+                <div style="padding:24px;background:#172554;color:white;border-radius:12px 12px 0 0">
+                    <div style="font-size:12px;opacity:.8;letter-spacing:1px">SUPERMARKET</div>
+                    <h1 style="font-size:22px;margin:8px 0 0">Pedido de compra ${escaparHtml(pedido.numero)}</h1>
+                </div>
+                <div style="padding:24px;border:1px solid #e2e8f0;border-top:0;border-radius:0 0 12px 12px">
+                    <p>Olá${fornecedor.contato ? `, ${escaparHtml(fornecedor.contato)}` : ''}!</p>
+                    <p>Encaminhamos nossa solicitação de compra para ${escaparHtml(fornecedor.nome)}.</p>
+                    ${entrega}
+                    <div style="overflow-x:auto">
+                        <table style="width:100%;border-collapse:collapse;font-size:13px">
+                            <thead><tr style="background:#f8fafc;text-align:left">
+                                <th style="padding:10px">Produto</th><th style="padding:10px">Código</th>
+                                <th style="padding:10px;text-align:right">Quantidade</th>
+                                <th style="padding:10px;text-align:right">Unitário</th>
+                                <th style="padding:10px;text-align:right">Subtotal</th>
+                            </tr></thead>
+                            <tbody>${itensHtml}</tbody>
+                        </table>
+                    </div>
+                    <p style="text-align:right;font-size:18px;font-weight:bold;margin:20px 0">Total: R$ ${total}</p>
+                    ${observacoes}
+                    <p style="color:#64748b;font-size:12px;margin-top:24px">Mensagem enviada automaticamente pelo sistema SuperMarket.</p>
+                </div>
+            </div>
+        `
+    });
+}
+
+async function registrarResultadoEmail(pedido, fornecedor) {
+    try {
+        await enviarEmailPedido(pedido, fornecedor);
+    } catch (error) {
+        console.error(`Falha ao enviar o pedido ${pedido.numero} para o fornecedor ${fornecedor.id}.`, error);
+        const { error: updateError } = await supabaseAdmin
+            .from('purchase_orders')
+            .update({ email_status: 'failed', email_error: 'Falha no envio SMTP.' })
+            .eq('id', pedido.id);
+        if (updateError) {
+            console.error('Não foi possível registrar a falha de envio do pedido.', updateError);
+        }
+        return { sent: false };
+    }
+
+    const { error } = await supabaseAdmin
+        .from('purchase_orders')
+        .update({
+            email_status: 'sent',
+            email_sent_at: new Date().toISOString(),
+            email_error: null
+        })
+        .eq('id', pedido.id);
+    if (error) {
+        console.error('O e-mail foi enviado, mas não foi possível atualizar o registro do pedido.', error);
+        return { sent: true, trackingError: true };
+    }
+    return { sent: true, trackingError: false };
+}
+
 function exigirSupabase(req, res, next) {
     if (!supabase) {
         return res.status(503).json({
@@ -293,6 +576,15 @@ function exigirSupabaseAdmin(req, res, next) {
         });
     }
 
+    next();
+}
+
+function exigirBancoAdministrativo(req, res, next) {
+    if (!supabaseAdmin) {
+        return res.status(503).json({
+            error: 'Esta função requer SUPABASE_SERVICE_ROLE_KEY configurada no servidor.'
+        });
+    }
     next();
 }
 
@@ -1058,6 +1350,368 @@ app.patch(
 );
 
 // ============================================================
+// FORNECEDORES E PEDIDOS DE COMPRA
+// ============================================================
+
+app.get(
+    '/api/suppliers/options',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin', 'product_clerk', 'cashier_product'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        try {
+            const { data, error } = await supabaseAdmin.from('suppliers')
+                .select('id,nome').eq('ativo', true).order('nome', { ascending: true }).limit(1000);
+            if (error) return responderErroFornecedores(res, error);
+            return res.json({ data: data || [] });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.get(
+    '/api/suppliers',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        try {
+            const { data, error } = await supabaseAdmin
+                .from('suppliers')
+                .select('*')
+                .order('nome', { ascending: true })
+                .limit(1000);
+            if (error) return responderErroFornecedores(res, error);
+            return res.json({ data: data || [] });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.get(
+    '/api/suppliers/:id',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({ error: 'Identificador de fornecedor inválido.' });
+        }
+        try {
+            const [{ data: fornecedor, error: fornecedorError }, { data: pedidos, error: pedidosError }] =
+                await Promise.all([
+                    supabaseAdmin.from('suppliers').select('*').eq('id', id).maybeSingle(),
+                    supabaseAdmin.from('purchase_orders').select('*').eq('supplier_id', id)
+                        .order('created_at', { ascending: false }).limit(50)
+                ]);
+            if (fornecedorError) return responderErroFornecedores(res, fornecedorError);
+            if (!fornecedor) return res.status(404).json({ error: 'Fornecedor não encontrado.' });
+            if (pedidosError) return responderErroFornecedores(res, pedidosError);
+            return res.json({ data: { ...fornecedor, pedidos: pedidos || [] } });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.post(
+    '/api/suppliers',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        let fornecedor;
+        try {
+            fornecedor = normalizarFornecedor(req.body);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+        try {
+            const { data, error } = await supabaseAdmin
+                .from('suppliers').insert(fornecedor).select('*').single();
+            if (error) return responderErroFornecedores(res, error);
+            return res.status(201).json({ data });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.put(
+    '/api/suppliers/:id',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({ error: 'Identificador de fornecedor inválido.' });
+        }
+        let fornecedor;
+        try {
+            fornecedor = normalizarFornecedor(req.body, true);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+        if (!Object.keys(fornecedor).length) {
+            return res.status(400).json({ error: 'Nenhum campo válido foi enviado para atualização.' });
+        }
+        fornecedor.updated_at = new Date().toISOString();
+        try {
+            const { data, error } = await supabaseAdmin
+                .from('suppliers').update(fornecedor).eq('id', id).select('*').maybeSingle();
+            if (error) return responderErroFornecedores(res, error);
+            if (!data) return res.status(404).json({ error: 'Fornecedor não encontrado.' });
+            return res.json({ data });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.patch(
+    '/api/suppliers/:id/active',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0 || typeof req.body?.ativo !== 'boolean') {
+            return res.status(400).json({ error: 'Informe um fornecedor válido e o estado ativo/inativo.' });
+        }
+        try {
+            const { data, error } = await supabaseAdmin.from('suppliers')
+                .update({ ativo: req.body.ativo, updated_at: new Date().toISOString() })
+                .eq('id', id).select('*').maybeSingle();
+            if (error) return responderErroFornecedores(res, error);
+            if (!data) return res.status(404).json({ error: 'Fornecedor não encontrado.' });
+            return res.json({ data });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.get(
+    '/api/purchase-orders',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        try {
+            const { data: pedidos, error } = await supabaseAdmin.from('purchase_orders')
+                .select('*').order('created_at', { ascending: false }).limit(500);
+            if (error) return responderErroFornecedores(res, error);
+            const ids = [...new Set((pedidos || []).map((pedido) => pedido.supplier_id))];
+            let fornecedores = [];
+            if (ids.length) {
+                const result = await supabaseAdmin.from('suppliers').select('id,nome,email').in('id', ids);
+                if (result.error) return responderErroFornecedores(res, result.error);
+                fornecedores = result.data || [];
+            }
+            const porId = new Map(fornecedores.map((fornecedor) => [fornecedor.id, fornecedor]));
+            return res.json({
+                data: (pedidos || []).map((pedido) => ({
+                    ...pedido,
+                    fornecedor: porId.get(pedido.supplier_id) || null
+                }))
+            });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.get(
+    '/api/purchase-orders/:id',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({ error: 'Identificador de pedido inválido.' });
+        }
+        try {
+            const { data: pedido, error } = await supabaseAdmin.from('purchase_orders')
+                .select('*').eq('id', id).maybeSingle();
+            if (error) return responderErroFornecedores(res, error);
+            if (!pedido) return res.status(404).json({ error: 'Pedido de compra não encontrado.' });
+            const { data: fornecedor, error: fornecedorError } = await supabaseAdmin
+                .from('suppliers').select('*').eq('id', pedido.supplier_id).maybeSingle();
+            if (fornecedorError) return responderErroFornecedores(res, fornecedorError);
+            return res.json({ data: { ...pedido, fornecedor } });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.post(
+    '/api/purchase-orders',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const supplierId = Number(req.body?.supplier_id);
+        if (!Number.isSafeInteger(supplierId) || supplierId <= 0) {
+            return res.status(400).json({ error: 'Selecione um fornecedor válido.' });
+        }
+        const entrega = dataIsoValida(req.body?.data_entrega);
+        if (entrega === undefined) {
+            return res.status(400).json({ error: 'Informe uma data de entrega válida.' });
+        }
+        const observacoes = textoOpcional(req.body?.observacoes);
+        if (observacoes && observacoes.length > 2000) {
+            return res.status(400).json({ error: 'As observações podem ter no máximo 2.000 caracteres.' });
+        }
+        let valores;
+        try {
+            valores = normalizarItensPedido(req.body?.itens);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        try {
+            const { data: fornecedor, error: fornecedorError } = await supabaseAdmin
+                .from('suppliers').select('*').eq('id', supplierId).maybeSingle();
+            if (fornecedorError) return responderErroFornecedores(res, fornecedorError);
+            if (!fornecedor || !fornecedor.ativo) {
+                return res.status(400).json({ error: 'O fornecedor selecionado não existe ou está inativo.' });
+            }
+            if (!fornecedor.email) {
+                return res.status(400).json({ error: 'Cadastre um e-mail para o fornecedor antes de enviar pedidos.' });
+            }
+
+            const numeroPedido = `PC-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${randomUUID().slice(0, 6).toUpperCase()}`;
+            const { data: pedido, error } = await supabaseAdmin.from('purchase_orders').insert({
+                numero: numeroPedido,
+                supplier_id: supplierId,
+                created_by: req.userProfile.id,
+                data_entrega: entrega,
+                observacoes,
+                itens: valores.itens,
+                total: valores.total,
+                status: 'ordered',
+                email_status: 'pending'
+            }).select('*').single();
+            if (error) return responderErroFornecedores(res, error);
+
+            const envio = await registrarResultadoEmail(pedido, fornecedor);
+            if (!envio.sent) {
+                return res.status(502).json({
+                    error: `O pedido ${pedido.numero} foi salvo, mas o e-mail não foi enviado. Confira o SMTP e tente reenviar pela tela de Pedidos de Compra.`,
+                    data: { ...pedido, fornecedor, email_status: 'failed' }
+                });
+            }
+            return res.status(201).json({
+                data: {
+                    ...pedido,
+                    fornecedor,
+                    email_status: envio.trackingError ? 'pending' : 'sent'
+                },
+                warning: envio.trackingError
+                    ? 'O e-mail foi enviado, mas o registro do envio não pôde ser atualizado. Verifique o pedido no banco.'
+                    : null
+            });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.post(
+    '/api/purchase-orders/:id/send',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({ error: 'Identificador de pedido inválido.' });
+        }
+        try {
+            const { data: pedido, error } = await supabaseAdmin.from('purchase_orders')
+                .select('*').eq('id', id).maybeSingle();
+            if (error) return responderErroFornecedores(res, error);
+            if (!pedido) return res.status(404).json({ error: 'Pedido de compra não encontrado.' });
+            if (pedido.email_status === 'sent') {
+                return res.status(409).json({ error: 'Este pedido já foi enviado ao fornecedor.' });
+            }
+            if (pedido.status === 'cancelled') {
+                return res.status(409).json({ error: 'Não é possível enviar um pedido cancelado.' });
+            }
+            const { data: fornecedor, error: fornecedorError } = await supabaseAdmin
+                .from('suppliers').select('*').eq('id', pedido.supplier_id).maybeSingle();
+            if (fornecedorError) return responderErroFornecedores(res, fornecedorError);
+            if (!fornecedor) return res.status(404).json({ error: 'Fornecedor do pedido não encontrado.' });
+
+            const envio = await registrarResultadoEmail(pedido, fornecedor);
+            if (!envio.sent) {
+                return res.status(502).json({
+                    error: 'O pedido permanece salvo, mas não foi possível enviar o e-mail. Confira a configuração SMTP e tente novamente.'
+                });
+            }
+            return res.json({
+                data: { ...pedido, fornecedor, email_status: envio.trackingError ? 'pending' : 'sent' },
+                warning: envio.trackingError
+                    ? 'O e-mail foi enviado, mas o registro do envio não pôde ser atualizado.'
+                    : null
+            });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.patch(
+    '/api/purchase-orders/:id/status',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const id = Number(req.params.id);
+        const status = req.body?.status;
+        if (!Number.isSafeInteger(id) || id <= 0 || !['received', 'cancelled'].includes(status)) {
+            return res.status(400).json({ error: 'Informe um pedido válido e um status permitido.' });
+        }
+        try {
+            const { data, error } = await supabaseAdmin.from('purchase_orders')
+                .update({ status, updated_at: new Date().toISOString() })
+                .eq('id', id).eq('status', 'ordered').select('*').maybeSingle();
+            if (error) return responderErroFornecedores(res, error);
+            if (!data) {
+                const { data: existing, error: lookupError } = await supabaseAdmin
+                    .from('purchase_orders').select('id').eq('id', id).maybeSingle();
+                if (lookupError) return responderErroFornecedores(res, lookupError);
+                return res.status(existing ? 409 : 404).json({
+                    error: existing
+                        ? 'Somente pedidos em aberto podem ter o status alterado.'
+                        : 'Pedido de compra não encontrado.'
+                });
+            }
+            return res.json({ data });
+        } catch (error) {
+            return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+// ============================================================
 // ARQUIVOS DO FRONTEND
 // ============================================================
 
@@ -1074,7 +1728,13 @@ app.use('/api', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(FRONTEND_PATH, 'index.html'));
+    if (!fs.existsSync(FRONTEND_INDEX)) {
+        return res.status(503).send(
+            'Frontend ainda nao compilado. Execute "npm run build" ou inicie com "npm start".'
+        );
+    }
+
+    res.sendFile(FRONTEND_INDEX);
 });
 
 // ============================================================
@@ -1083,6 +1743,12 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`SuperMarket rodando em http://localhost:${PORT}`);
+
+    if (!fs.existsSync(FRONTEND_INDEX)) {
+        console.warn(
+            'Build do frontend nao encontrado. Execute "npm run build" ou inicie com "npm start".'
+        );
+    }
 
     console.log(
         `Supabase: ${
