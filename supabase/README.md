@@ -1,5 +1,11 @@
 # Acesso e colaboradores
 
+## Categorias de produtos
+
+Antes de gerenciar categorias ou cadastrar produtos, execute [`categories.sql`](./categories.sql) em **SQL Editor > New query** no Supabase. O script cria a tabela usada pela tela, disponibiliza a leitura para os usuários do sistema e preserva as categorias já existentes nos produtos.
+
+As operações de criação, edição, ativação e exclusão são restritas a administradores e usam `SUPABASE_SERVICE_ROLE_KEY` no servidor. Uma categoria com produtos vinculados não pode ser excluída; primeiro altere a categoria desses produtos.
+
 ## Criar o primeiro administrador
 
 1. Acesse [supabase.com/dashboard](https://supabase.com/dashboard) e entre na conta proprietária do projeto.

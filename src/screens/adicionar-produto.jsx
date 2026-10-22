@@ -1,17 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import pageCss from '../../ProjetoSuperMarket/adicionar-produto/style.css?inline';
 import sidebarCss from "../../ProjetoSuperMarket/sidebar.css?inline";
 import Sidebar from "../Sidebar.jsx";
 import { supplierApi } from '../supplierApi.js';
 export default function adicionar_produtoScreen(props) {
+  const imageInputRef = useRef(null);
   const [supplierOptions, setSupplierOptions] = useState([]);
   const [supplierLoadError, setSupplierLoadError] = useState('');
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [categoryLoadError, setCategoryLoadError] = useState('');
   useEffect(() => {
     let active = true;
     supplierApi('/suppliers/options')
       .then((result) => { if (active) setSupplierOptions(result.data || []); })
       .catch((error) => {
         if (active) setSupplierLoadError(error.message || 'Não foi possível carregar os fornecedores.');
+      });
+    supplierApi('/categories')
+      .then((result) => { if (active) setCategoryOptions((result.data || []).filter((item) => item.ativo)); })
+      .catch((error) => {
+        if (active) setCategoryLoadError(error.message || 'Não foi possível carregar as categorias.');
       });
     return () => { active = false; };
   }, []);
@@ -66,17 +74,11 @@ export default function adicionar_produtoScreen(props) {
                 </div>
                 <div className="form-group">
                   <label className="form-label required" htmlFor="productCategory">Categoria</label>
-                  <select id="productCategory" className="form-select" required>
+                  <select id="productCategory" className="form-select" required disabled={Boolean(categoryLoadError)}>
                     <option value="">Selecione uma categoria</option>
-                    <option value="alimentos">Alimentos</option>
-                    <option value="bebidas">Bebidas</option>
-                    <option value="higiene">Higiene e Limpeza</option>
-                    <option value="frios">Frios e Laticínios</option>
-                    <option value="hortifruti">Hortifrúti</option>
-                    <option value="padaria">Padaria</option>
-                    <option value="acougue">Açougue</option>
-                    <option value="outros">Outros</option>
+                    {categoryOptions.map((category) => <option key={category.slug} value={category.slug}>{category.nome}</option>)}
                   </select>
+                  {categoryLoadError && <span className="form-hint" role="alert">{categoryLoadError}</span>}
                 </div>
                 <div className="form-group">
                   <label className="form-label required" htmlFor="productBrand">Marca</label>
@@ -164,21 +166,31 @@ export default function adicionar_produtoScreen(props) {
             
             <div className="form-section">
               <h2 className="form-section-title">Imagem do Produto</h2>
-              <div className="image-upload" id="imageUpload" data-legacy-action="document.getElementById('productImage').click()">
-                <svg className="upload-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path>
-                </svg>
-                <p className="upload-text">
-                  Clique para selecionar ou arraste a imagem aqui
-                </p>
-                <p className="upload-hint">PNG, JPG ou WEBP (máx. 5MB)</p>
-                <input type="file" id="productImage" accept="image/*" style={{display: "none"}} />
+              <div className="image-upload" id="imageUpload">
+                <span className="image-upload-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M4 16.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2.5M12 15V4m0 0L8 8m4-4 4 4" />
+                  </svg>
+                </span>
+                <div className="image-upload-copy">
+                  <p className="upload-text">Adicione uma foto do produto</p>
+                  <p className="upload-hint">PNG, JPEG ou WEBP · até 5 MB</p>
+                </div>
+                <button type="button" className="image-upload-button" onClick={() => imageInputRef.current?.click()}>
+                  Selecionar imagem
+                </button>
+                <input ref={imageInputRef} type="file" id="productImage" accept="image/png,image/jpeg,image/webp" hidden />
               </div>
               <div className={`image-preview${props.images?.length ? ' active' : ''}`} id="imagePreview">
                 {props.images?.map((image, index) => (
                   <div className="preview-item" key={`${image.slice(-24)}-${index}`}>
                     <img src={image} alt={`Pré-visualização ${index + 1}`} />
-                    <button type="button" className="preview-remove" aria-label="Remover imagem" onClick={() => props.onRemoveImage(index)}>×</button>
+                    <div className="preview-caption">
+                      <span>Imagem selecionada</span>
+                      <button type="button" className="preview-remove" aria-label="Remover imagem" onClick={() => props.onRemoveImage(index)}>
+                        Remover
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

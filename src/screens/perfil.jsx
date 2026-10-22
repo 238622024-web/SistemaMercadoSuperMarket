@@ -59,8 +59,8 @@ export default function perfilScreen() {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = '';
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setNotice({ type: 'error', text: 'Escolha um arquivo de imagem válido.' });
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+      setNotice({ type: 'error', text: 'Escolha uma imagem no formato PNG ou JPEG.' });
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
@@ -222,7 +222,7 @@ export default function perfilScreen() {
                     ref={photoInputRef}
                     className="profile-photo-input"
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg"
                     onChange={handlePhotoChange}
                     aria-label="Selecionar foto do perfil"
                   />

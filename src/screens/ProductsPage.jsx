@@ -39,6 +39,11 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false);
   const [supplierOptions, setSupplierOptions] = useState([]);
   const [supplierLoadError, setSupplierLoadError] = useState('');
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [categoryLoadError, setCategoryLoadError] = useState('');
+  const [imageDataUrl, setImageDataUrl] = useState('');
+  const [imageName, setImageName] = useState('');
+  const [removeImage, setRemoveImage] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -46,6 +51,11 @@ export default function ProductsPage() {
       .then((result) => { if (active) setSupplierOptions(result.data || []); })
       .catch((failure) => {
         if (active) setSupplierLoadError(failure.message || 'Não foi possível carregar os fornecedores.');
+      });
+    supplierApi('/categories')
+      .then((result) => { if (active) setCategoryOptions(result.data || []); })
+      .catch((failure) => {
+        if (active) setCategoryLoadError(failure.message || 'Não foi possível carregar as categorias.');
       });
     return () => { active = false; };
   }, []);
@@ -110,23 +120,28 @@ export default function ProductsPage() {
             setChecked(next);
             setSelectAll(products.length > 0 && products.every((item) => next[item.id]));
           }} /></td>
-          <td><div className="product-details"><h4>{product.nome}</h4><small>{product.marca || ''}</small></div></td>
-          <td>{product.codigo}</td><td>{category(product.categoria)}</td><td>{currency(product.preco_venda)}</td>
+          <td><div className="product-details" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {product.imagem_url && <img src={product.imagem_url} alt="" loading="lazy" style={{ width: '42px', height: '42px', borderRadius: '8px', objectFit: 'cover' }} />}
+            <div><h4>{product.nome}</h4><small>{product.marca || ''}</small></div>
+          </div></td>
+          <td>{categoryOptions.find((item) => item.slug === product.categoria)?.nome || category(product.categoria)}</td><td>{currency(product.preco_venda)}</td>
           <td>{stock.toLocaleString('pt-BR')} {unit(product.unidade)}</td>
           <td><span className={`status-badge ${statusClass}`}>{status}</span></td>
           <td><div className="product-actions">
-            <button type="button" className="product-action-btn product-action-view" title="Consultar produto" onClick={() => { setSelected(product); setEditing(false); setError(''); }}>Consultar</button>
+            <button type="button" className="product-action-btn product-action-view" title="Consultar produto" onClick={() => { setSelected(product); setEditing(false); setError(''); setImageDataUrl(''); setImageName(''); setRemoveImage(false); }}>Consultar</button>
             {!inactive && <button type="button" className="product-action-btn product-action-disable" title="Desativar produto" onClick={() => { setPendingDeactivate(product); setConfirmMessage(`Tem certeza de que deseja desativar "${product.nome}"?`); setConfirming(true); }}>Desativar</button>}
           </div></td>
         </tr>
       );
     });
-  }, [checked, loadProducts, loadingError, products, search]);
+  }, [categoryOptions, checked, loadProducts, loadingError, products, search]);
+
+  const selectedCategoryLabel = categoryOptions.find((item) => item.slug === selected?.categoria)?.nome;
 
   const details = selected ? [
     ['Nome do produto', selected.nome],
     ['Código/SKU', selected.codigo],
-    ['Categoria', category(selected.categoria)],
+    ['Categoria', selectedCategoryLabel || category(selected.categoria)],
     ['Marca', selected.marca],
     ['Descrição', selected.descricao],
     ['Preço de custo', currency(selected.preco_custo)],
@@ -139,16 +154,19 @@ export default function ProductsPage() {
     ['Data de validade', date(selected.data_validade)],
     ['Peso', selected.peso_gramas == null ? '-' : `${Number(selected.peso_gramas).toLocaleString('pt-BR')} g`],
     ['Localização', selected.localizacao]
-  ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || '-'}</dd></div>) : null;
+  ].map(([label, value]) => <div className="product-detail-item" key={label}><dt>{label}</dt><dd>{value || '-'}</dd></div>) : null;
 
   const saveEdit = async (event) => {
     event.preventDefault();
     if (!selected || saving) return;
     const form = new FormData(event.currentTarget);
     const product = Object.fromEntries(form.entries());
-    for (const field of ['preco_custo', 'preco_venda', 'estoque_atual', 'estoque_minimo', 'peso_gramas']) {
+    for (const field of ['preco_custo', 'preco_venda', 'estoque_minimo', 'peso_gramas']) {
       product[field] = form.get(field) === '' ? null : Number(form.get(field));
     }
+    delete product.estoque_atual;
+    if (imageDataUrl) product.imagem_data_url = imageDataUrl;
+    if (removeImage) product.remover_imagem = true;
     setSaving(true);
     setError('');
     try {
@@ -163,6 +181,9 @@ export default function ProductsPage() {
       setProducts((current) => current.map((item) => Number(item.id) === Number(saved.id) ? saved : item));
       setSelected(saved);
       setEditing(false);
+      setImageDataUrl('');
+      setImageName('');
+      setRemoveImage(false);
     } catch (failure) {
       setError(failure.message || 'Erro de comunicação ao atualizar o produto.');
     } finally {
@@ -196,6 +217,35 @@ export default function ProductsPage() {
     setConfirming(true);
   };
 
+  const selectProductImage = (event) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setError('Selecione uma imagem PNG, JPEG ou WEBP.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('A imagem deve ter no máximo 5 MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        setError('Não foi possível ler a imagem selecionada.');
+        return;
+      }
+      setImageDataUrl(reader.result);
+      setImageName(file.name);
+      setRemoveImage(false);
+      setError('');
+    };
+    reader.onerror = () => setError('Não foi possível ler a imagem selecionada.');
+    reader.readAsDataURL(file);
+  };
+
   return (
     <ProductMarkup
       rows={rows}
@@ -210,14 +260,28 @@ export default function ProductsPage() {
       product={selected}
       supplierOptions={supplierOptions}
       supplierLoadError={supplierLoadError}
+      categoryOptions={categoryOptions}
+      categoryLoadError={categoryLoadError}
       details={details}
       detailHidden={!selected}
       editing={editing}
       onEdit={() => { setError(''); setEditing(true); }}
-      onCancelEdit={() => { setEditing(false); setError(''); }}
+      onCancelEdit={() => { setEditing(false); setError(''); setImageDataUrl(''); setImageName(''); setRemoveImage(false); }}
+      imageDataUrl={imageDataUrl}
+      imageName={imageName}
+      removeImage={removeImage}
+      onImageChange={selectProductImage}
+      onRemoveImage={() => {
+        if (imageDataUrl) {
+          setImageDataUrl('');
+          setImageName('');
+          return;
+        }
+        setRemoveImage((current) => !current);
+      }}
       onSave={saveEdit}
       saving={saving}
-      onClose={() => { setSelected(null); setEditing(false); }}
+      onClose={() => { setSelected(null); setEditing(false); setImageDataUrl(''); setImageName(''); setRemoveImage(false); }}
       error={error}
       onDeactivate={openDeactivate}
       confirming={confirming}

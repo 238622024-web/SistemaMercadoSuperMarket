@@ -227,12 +227,18 @@ export default function Sidebar({ activeRoute }) {
         <button
           type="button"
           className="sidebar-logout"
+          aria-label="Sair da conta"
+          title="Sair da conta"
           onClick={async () => {
             await signOut();
             navigate('/index');
           }}
         >
-          Sair
+          <svg className="sidebar-logout-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M10 17l5-5-5-5M15 12H3m9-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="sidebar-logout-label">Sair da conta</span>
+          <span className="sidebar-logout-hint" aria-hidden="true">Encerrar sessão</span>
         </button>
       </div>
     </aside>

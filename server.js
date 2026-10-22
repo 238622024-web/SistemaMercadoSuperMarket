@@ -76,7 +76,7 @@ const supabaseAdmin =
 
 app.disable('x-powered-by');
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 const UNIDADES_PERMITIDAS = new Set([
@@ -97,6 +97,97 @@ function textoOpcional(valor) {
     }
 
     return String(valor).trim();
+}
+
+function decodificarImagemProduto(dataUrl) {
+    const correspondencia = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(dataUrl || ''));
+    if (!correspondencia) {
+        throw new Error('A imagem deve ser PNG, JPEG ou WEBP válida.');
+    }
+
+    const [, contentType, base64] = correspondencia;
+    const buffer = Buffer.from(base64, 'base64');
+    if (!buffer.length || buffer.length > 5 * 1024 * 1024 || buffer.toString('base64') !== base64) {
+        throw new Error('A imagem deve ter no máximo 5 MB e estar em um formato válido.');
+    }
+
+    const signatures = {
+        'image/png': buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+        'image/jpeg': buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff,
+        'image/webp': buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP'
+    };
+    if (!signatures[contentType]) {
+        throw new Error('O conteúdo do arquivo não corresponde ao formato da imagem.');
+    }
+
+    const extension = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }[contentType];
+    return { buffer, contentType, extension };
+}
+
+function normalizarCategoria(body) {
+    const nome = typeof body?.nome === 'string' ? body.nome.trim() : '';
+    const descricao = typeof body?.descricao === 'string' ? body.descricao.trim() : '';
+    if (nome.length < 2 || nome.length > 80) {
+        throw new Error('O nome da categoria deve ter entre 2 e 80 caracteres.');
+    }
+    if (descricao.length > 240) {
+        throw new Error('A descrição deve ter no máximo 240 caracteres.');
+    }
+    return { nome, descricao: descricao || null };
+}
+
+function slugCategoria(nome) {
+    return nome.normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 80);
+}
+
+function responderErroCategorias(res, error) {
+    console.error('Erro no gerenciamento de categorias.', error);
+    if (error.code === '42P01' || error.code === 'PGRST205') {
+        return res.status(503).json({
+            error: 'A tabela public.categorias não foi encontrada. Execute supabase/categories.sql no Supabase.'
+        });
+    }
+    if (error.code === '23505') {
+        return res.status(409).json({ error: 'Já existe uma categoria com esse nome.' });
+    }
+    if (error.code === '23503') {
+        return res.status(409).json({
+            error: 'Esta categoria possui produtos vinculados. Reclassifique-os antes de excluí-la.'
+        });
+    }
+    if (error.code === '42501') {
+        return res.status(403).json({ error: 'O Supabase bloqueou o acesso às categorias. Confira as políticas RLS.' });
+    }
+    return res.status(500).json({ error: 'Não foi possível concluir a operação de categorias.' });
+}
+
+async function removerImagemProduto(objectPath) {
+    try {
+        const { error } = await supabaseAdmin.storage
+            .from('product-images')
+            .remove([objectPath]);
+        if (error) console.error('Não foi possível remover imagem sem produto associado.', error);
+    } catch (error) {
+        console.error('Não foi possível remover imagem sem produto associado.', error);
+    }
+}
+
+function caminhoImagemProduto(url) {
+    if (!url || !supabaseUrl) return null;
+    try {
+        const imageUrl = new URL(url);
+        const storageUrl = new URL(supabaseUrl);
+        const prefix = '/storage/v1/object/public/product-images/';
+        if (imageUrl.origin !== storageUrl.origin || !imageUrl.pathname.startsWith(prefix)) return null;
+        return decodeURIComponent(imageUrl.pathname.slice(prefix.length));
+    } catch {
+        return null;
+    }
 }
 
 function numero(
@@ -314,6 +405,9 @@ function normalizarItensPedido(itens) {
         const nome = typeof item?.nome === 'string' ? item.nome.trim() : '';
         const codigo = typeof item?.codigo === 'string' ? item.codigo.trim() : '';
         const unidade = typeof item?.unidade === 'string' ? item.unidade.trim() : '';
+        const produtoId = item?.produto_id == null || item.produto_id === ''
+            ? null
+            : Number(item.produto_id);
         const quantidade = Number(item?.quantidade);
         const preco = Number(item?.preco_unitario);
         if (!nome || nome.length > 160) {
@@ -325,10 +419,14 @@ function normalizarItensPedido(itens) {
         if (!Number.isFinite(preco) || preco < 0 || preco > 999999999) {
             throw new Error(`O preço do item ${index + 1} deve ser um valor válido.`);
         }
+        if (produtoId !== null && (!Number.isSafeInteger(produtoId) || produtoId <= 0)) {
+            throw new Error(`Selecione um produto válido para o item ${index + 1}.`);
+        }
         const subtotal = Math.round(quantidade * preco * 100) / 100;
         total += subtotal;
         return {
             nome,
+            produto_id: produtoId,
             codigo: codigo || null,
             unidade: unidade || null,
             quantidade,
@@ -1131,6 +1229,159 @@ app.patch(
 );
 
 // ============================================================
+// CATEGORIAS DE PRODUTOS
+// ============================================================
+
+app.get(
+    '/api/categories',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin', 'cashier', 'product_clerk', 'cashier_product'),
+    async (req, res) => {
+        try {
+            const [{ data: categorias, error: categoriasError }, { data: produtos, error: produtosError }] = await Promise.all([
+                supabase.from('categorias').select('slug,nome,descricao,ativo').order('nome', { ascending: true }),
+                supabase.from('produtos').select('categoria,estoque_atual')
+            ]);
+            if (categoriasError) return responderErroCategorias(res, categoriasError);
+            if (produtosError) return responderErroSupabase(res, produtosError);
+
+            const totais = new Map();
+            for (const produto of produtos || []) {
+                if (!produto.categoria) continue;
+                const total = totais.get(produto.categoria) || { produtos: 0, estoque: 0 };
+                total.produtos += 1;
+                total.estoque += Number(produto.estoque_atual || 0);
+                totais.set(produto.categoria, total);
+            }
+            return res.json({
+                data: (categorias || []).map((categoria) => ({
+                    ...categoria,
+                    produtos: totais.get(categoria.slug)?.produtos || 0,
+                    estoque: totais.get(categoria.slug)?.estoque || 0
+                }))
+            });
+        } catch (error) {
+            return responderErroCategorias(res, error);
+        }
+    }
+);
+
+app.post(
+    '/api/categories',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        let categoria;
+        try {
+            categoria = normalizarCategoria(req.body);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+        const slug = slugCategoria(categoria.nome);
+        if (!slug) return res.status(400).json({ error: 'Informe um nome que permita criar a identificação da categoria.' });
+
+        try {
+            const { data, error } = await supabaseAdmin.from('categorias')
+                .insert({ ...categoria, slug, ativo: true })
+                .select('slug,nome,descricao,ativo')
+                .single();
+            if (error) return responderErroCategorias(res, error);
+            return res.status(201).json({ data: { ...data, produtos: 0, estoque: 0 } });
+        } catch (error) {
+            return responderErroCategorias(res, error);
+        }
+    }
+);
+
+app.put(
+    '/api/categories/:slug',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        let categoria;
+        try {
+            categoria = normalizarCategoria(req.body);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+        try {
+            const { data, error } = await supabaseAdmin.from('categorias')
+                .update(categoria)
+                .eq('slug', req.params.slug)
+                .select('slug,nome,descricao,ativo')
+                .maybeSingle();
+            if (error) return responderErroCategorias(res, error);
+            if (!data) return res.status(404).json({ error: 'Categoria não encontrada.' });
+            return res.json({ data });
+        } catch (error) {
+            return responderErroCategorias(res, error);
+        }
+    }
+);
+
+app.patch(
+    '/api/categories/:slug',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        if (typeof req.body?.ativo !== 'boolean') {
+            return res.status(400).json({ error: 'Informe um status válido para a categoria.' });
+        }
+        try {
+            const { data, error } = await supabaseAdmin.from('categorias')
+                .update({ ativo: req.body.ativo })
+                .eq('slug', req.params.slug)
+                .select('slug,nome,descricao,ativo')
+                .maybeSingle();
+            if (error) return responderErroCategorias(res, error);
+            if (!data) return res.status(404).json({ error: 'Categoria não encontrada.' });
+            return res.json({ data });
+        } catch (error) {
+            return responderErroCategorias(res, error);
+        }
+    }
+);
+
+app.delete(
+    '/api/categories/:slug',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        try {
+            const { count, error: productsError } = await supabaseAdmin.from('produtos')
+                .select('id', { count: 'exact', head: true })
+                .eq('categoria', req.params.slug);
+            if (productsError) return responderErroSupabase(res, productsError);
+            if (count > 0) {
+                return res.status(409).json({
+                    error: 'Esta categoria possui produtos. Reclassifique-os antes de excluí-la.'
+                });
+            }
+
+            const { data, error } = await supabaseAdmin.from('categorias')
+                .delete()
+                .eq('slug', req.params.slug)
+                .select('slug')
+                .maybeSingle();
+            if (error) return responderErroCategorias(res, error);
+            if (!data) return res.status(404).json({ error: 'Categoria não encontrada.' });
+            return res.json({ message: 'Categoria excluída com sucesso.' });
+        } catch (error) {
+            return responderErroCategorias(res, error);
+        }
+    }
+);
+
+// ============================================================
 // LISTAR E PESQUISAR PRODUTOS
 // GET /api/products
 // Exemplos:
@@ -1227,29 +1478,88 @@ app.get('/api/products/:id', exigirSupabase, exigirUsuario, exigirPapel('admin',
 
 app.post('/api/products', exigirSupabase, exigirUsuario, exigirPapel('admin', 'product_clerk', 'cashier_product'), async (req, res) => {
     let produto;
+    let uploadedObjectPath = null;
 
     try {
-        produto = normalizarProduto(req.body);
+        produto = normalizarProduto({
+            ...req.body,
+            imagem_url: req.body?.imagem_data_url ? null : req.body?.imagem_url
+        });
     } catch (error) {
         return res.status(400).json({
             error: error.message
         });
     }
 
-    const { data, error } = await supabase
-        .from('produtos')
-        .insert(produto)
-        .select('*')
-        .single();
-
-    if (error) {
-        return responderErroSupabase(res, error);
+    const { data: categoriaExistente, error: categoriaError } = await supabase
+        .from('categorias')
+        .select('slug,ativo')
+        .eq('slug', produto.categoria)
+        .maybeSingle();
+    if (categoriaError) return responderErroCategorias(res, categoriaError);
+    if (!categoriaExistente || !categoriaExistente.ativo) {
+        return res.status(400).json({ error: 'Selecione uma categoria ativa para o produto.' });
     }
 
-    return res.status(201).json({
-        message: 'Produto cadastrado com sucesso.',
-        data
-    });
+    if (req.body?.imagem_data_url) {
+        if (!supabaseAdmin) {
+            return res.status(503).json({
+                error: 'O envio de imagens requer SUPABASE_SERVICE_ROLE_KEY configurada no servidor.'
+            });
+        }
+
+        let imagem;
+        try {
+            imagem = decodificarImagemProduto(req.body.imagem_data_url);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        uploadedObjectPath = `${randomUUID()}.${imagem.extension}`;
+        let uploadError;
+        try {
+            ({ error: uploadError } = await supabaseAdmin.storage
+                .from('product-images')
+                .upload(uploadedObjectPath, imagem.buffer, {
+                    contentType: imagem.contentType,
+                    cacheControl: '3600',
+                    upsert: false
+                }));
+        } catch (error) {
+            console.error('Falha ao enviar imagem para o Supabase Storage.', error);
+            await removerImagemProduto(uploadedObjectPath);
+            return res.status(502).json({ error: 'Não foi possível enviar a imagem do produto.' });
+        }
+
+        if (uploadError) {
+            return responderErroSupabase(res, uploadError);
+        }
+        produto.imagem_url = supabaseAdmin.storage
+            .from('product-images')
+            .getPublicUrl(uploadedObjectPath).data.publicUrl;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('produtos')
+            .insert(produto)
+            .select('*')
+            .single();
+
+        if (error) {
+            if (uploadedObjectPath) await removerImagemProduto(uploadedObjectPath);
+            return responderErroSupabase(res, error);
+        }
+
+        return res.status(201).json({
+            message: 'Produto cadastrado com sucesso.',
+            data
+        });
+    } catch (error) {
+        if (uploadedObjectPath) await removerImagemProduto(uploadedObjectPath);
+        console.error('Falha ao cadastrar produto.', error);
+        return res.status(500).json({ error: 'Não foi possível cadastrar o produto.' });
+    }
 });
 
 // ============================================================
@@ -1266,10 +1576,26 @@ app.put('/api/products/:id', exigirSupabase, exigirUsuario, exigirPapel('admin')
         });
     }
 
+    if (Object.hasOwn(req.body || {}, 'estoque_atual')) {
+        return res.status(400).json({
+            error: 'Altere o saldo pelo Controle de Estoque para registrar a movimentação no histórico.'
+        });
+    }
+
     let produto;
+    let imagemNovaPath = null;
 
     try {
-        produto = normalizarProduto(req.body, true);
+        const imagemDataUrl = req.body?.imagem_data_url;
+        const removerImagem = req.body?.remover_imagem === true;
+        produto = normalizarProduto({
+            ...req.body,
+            ...(imagemDataUrl || removerImagem ? { imagem_url: null } : {})
+        }, true);
+
+        if (imagemDataUrl && removerImagem) {
+            return res.status(400).json({ error: 'Escolha uma nova imagem ou remova a imagem atual, não os dois.' });
+        }
     } catch (error) {
         return res.status(400).json({
             error: error.message
@@ -1282,27 +1608,96 @@ app.put('/api/products/:id', exigirSupabase, exigirUsuario, exigirPapel('admin')
         });
     }
 
-    const { data, error } = await supabase
-        .from('produtos')
-        .update(produto)
-        .eq('id', id)
-        .select('*')
-        .maybeSingle();
+    try {
+        const { data: existente, error: lookupError } = await supabase
+            .from('produtos')
+            .select('id,imagem_url')
+            .eq('id', id)
+            .maybeSingle();
+        if (lookupError) return responderErroSupabase(res, lookupError);
+        if (!existente) return res.status(404).json({ error: 'Produto não encontrado.' });
 
-    if (error) {
-        return responderErroSupabase(res, error);
-    }
+        if (req.body?.remover_imagem === true && caminhoImagemProduto(existente.imagem_url) && !supabaseAdmin) {
+            return res.status(503).json({
+                error: 'A remoção da imagem requer SUPABASE_SERVICE_ROLE_KEY configurada no servidor.'
+            });
+        }
 
-    if (!data) {
-        return res.status(404).json({
-            error: 'Produto não encontrado.'
+        if (Object.hasOwn(produto, 'categoria') && produto.categoria) {
+            const { data: categoriaExistente, error: categoriaError } = await supabase
+                .from('categorias')
+                .select('slug')
+                .eq('slug', produto.categoria)
+                .maybeSingle();
+            if (categoriaError) return responderErroCategorias(res, categoriaError);
+            if (!categoriaExistente) return res.status(400).json({ error: 'Selecione uma categoria válida para o produto.' });
+        }
+
+        if (req.body?.imagem_data_url) {
+            if (!supabaseAdmin) {
+                return res.status(503).json({
+                    error: 'A alteração de imagens requer SUPABASE_SERVICE_ROLE_KEY configurada no servidor.'
+                });
+            }
+
+            let imagem;
+            try {
+                imagem = decodificarImagemProduto(req.body.imagem_data_url);
+            } catch (error) {
+                return res.status(400).json({ error: error.message });
+            }
+
+            imagemNovaPath = `${randomUUID()}.${imagem.extension}`;
+            const { error: uploadError } = await supabaseAdmin.storage
+                .from('product-images')
+                .upload(imagemNovaPath, imagem.buffer, {
+                    contentType: imagem.contentType,
+                    cacheControl: '3600',
+                    upsert: false
+                });
+            if (uploadError) {
+                console.error('Falha ao enviar nova imagem do produto.', uploadError);
+                await removerImagemProduto(imagemNovaPath);
+                return res.status(502).json({ error: 'Não foi possível enviar a imagem do produto.' });
+            }
+            produto.imagem_url = supabaseAdmin.storage
+                .from('product-images')
+                .getPublicUrl(imagemNovaPath).data.publicUrl;
+        }
+
+        const { data, error } = await supabase
+            .from('produtos')
+            .update(produto)
+            .eq('id', id)
+            .select('*')
+            .maybeSingle();
+
+        if (error) {
+            if (imagemNovaPath) await removerImagemProduto(imagemNovaPath);
+            return responderErroSupabase(res, error);
+        }
+
+        if (!data) {
+            if (imagemNovaPath) await removerImagemProduto(imagemNovaPath);
+            return res.status(404).json({ error: 'Produto não encontrado.' });
+        }
+
+        if (req.body?.imagem_data_url || req.body?.remover_imagem === true) {
+            const imagemAnteriorPath = caminhoImagemProduto(existente.imagem_url);
+            if (imagemAnteriorPath && imagemAnteriorPath !== imagemNovaPath) {
+                await removerImagemProduto(imagemAnteriorPath);
+            }
+        }
+
+        return res.json({
+            message: 'Produto atualizado com sucesso.',
+            data
         });
+    } catch (error) {
+        if (imagemNovaPath) await removerImagemProduto(imagemNovaPath);
+        console.error('Falha ao atualizar produto.', error);
+        return res.status(500).json({ error: 'Não foi possível atualizar o produto.' });
     }
-
-    return res.json({
-        message: 'Produto atualizado com sucesso.',
-        data
-    });
 });
 
 // ============================================================
@@ -1348,6 +1743,91 @@ app.patch(
         });
     }
 );
+
+app.get(
+    '/api/stock/movements',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin', 'product_clerk', 'cashier_product'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const productId = Number(req.query.product_id);
+        if (!Number.isSafeInteger(productId) || productId <= 0) {
+            return res.status(400).json({ error: 'Selecione um produto válido.' });
+        }
+        try {
+            const { data, error } = await supabaseAdmin.from('stock_movements')
+                .select('id,product_id,tipo,quantidade,estoque_anterior,estoque_posterior,motivo,observacoes,referencia,created_at')
+                .eq('product_id', productId)
+                .order('created_at', { ascending: false })
+                .limit(100);
+            if (error) return responderErroEstoque(res, error);
+            return res.json({ data: data || [] });
+        } catch (error) {
+            return responderErroEstoque(res, error);
+        }
+    }
+);
+
+app.post(
+    '/api/stock/movements',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin', 'product_clerk', 'cashier_product'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const productId = Number(req.body?.product_id);
+        const type = req.body?.type;
+        const amount = Number(req.body?.quantity);
+        const reason = req.body?.reason;
+        const notes = typeof req.body?.notes === 'string' ? req.body.notes.trim() : '';
+        const allowedTypes = new Set(['in', 'out', 'set']);
+        const allowedReasons = new Set(['compra', 'devolucao', 'perda', 'vencimento', 'inventario', 'outro']);
+
+        if (!Number.isSafeInteger(productId) || productId <= 0
+            || !allowedTypes.has(type)
+            || !Number.isFinite(amount) || amount < 0 || amount > 1000000
+            || (type !== 'set' && amount <= 0)
+            || !allowedReasons.has(reason)
+            || notes.length > 500) {
+            return res.status(400).json({ error: 'Informe produto, tipo, quantidade e motivo válidos.' });
+        }
+
+        try {
+            const { data, error } = await supabaseAdmin.rpc('adjust_product_stock', {
+                p_product_id: productId,
+                p_type: type,
+                p_quantity: amount,
+                p_reason: reason,
+                p_notes: notes || null,
+                p_performed_by: req.userProfile.id
+            });
+            if (error) return responderErroEstoque(res, error);
+            return res.status(201).json({ data });
+        } catch (error) {
+            return responderErroEstoque(res, error);
+        }
+    }
+);
+
+function responderErroEstoque(res, error) {
+    console.error('Erro ao acessar o controle de estoque:', error);
+    if (error.code === 'P0001') {
+        return res.status(409).json({ error: error.message || 'A movimentação não pode ser realizada.' });
+    }
+    if (error.code === '23503' || error.code === '23514' || error.code === '22P02') {
+        return res.status(400).json({ error: 'Os dados da movimentação são inválidos.' });
+    }
+    if (error.code === '42P01' || error.code === 'PGRST205' || error.code === 'PGRST202') {
+        return res.status(503).json({
+            error: 'O controle de estoque ainda não foi configurado no banco. Execute supabase/stock-management.sql no SQL Editor do Supabase.'
+        });
+    }
+    if (error.code === '42501') {
+        return res.status(403).json({ error: 'O Supabase bloqueou a operação. Verifique a chave administrativa do servidor.' });
+    }
+    return res.status(500).json({ error: 'Não foi possível concluir a operação de estoque.' });
+}
 
 // ============================================================
 // FORNECEDORES E PEDIDOS DE COMPRA
@@ -1690,6 +2170,14 @@ app.patch(
             return res.status(400).json({ error: 'Informe um pedido válido e um status permitido.' });
         }
         try {
+            if (status === 'received') {
+                const { data, error } = await supabaseAdmin.rpc('receive_purchase_order', {
+                    p_order_id: id,
+                    p_performed_by: req.userProfile.id
+                });
+                if (error) return responderErroEstoque(res, error);
+                return res.json({ data });
+            }
             const { data, error } = await supabaseAdmin.from('purchase_orders')
                 .update({ status, updated_at: new Date().toISOString() })
                 .eq('id', id).eq('status', 'ordered').select('*').maybeSingle();

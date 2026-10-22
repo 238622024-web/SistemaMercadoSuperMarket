@@ -1,6 +1,6 @@
 import pageCss from './login.css?inline';
 export default function indexScreen(props) {
-  return <><style>{pageCss}</style><div className="legacy-screen">
+  return <><style>{pageCss}</style><div className="legacy-screen login-screen">
     
     
     
@@ -15,6 +15,14 @@ export default function indexScreen(props) {
             
             <div className="left-content">
                 <div className="logo-container">
+                    <div className="logo-particles" aria-hidden="true">
+                        <span className="logo-particle logo-particle-one"></span>
+                        <span className="logo-particle logo-particle-two"></span>
+                        <span className="logo-particle logo-particle-three"></span>
+                        <span className="logo-particle logo-particle-four"></span>
+                        <span className="logo-particle logo-particle-five"></span>
+                        <span className="logo-particle logo-particle-six"></span>
+                    </div>
                     <div className="logo-icon">
                         
                         <img src="/images/Logo-SuperMarket.png" alt="Logo SuperMarket" />
@@ -22,15 +30,6 @@ export default function indexScreen(props) {
                 </div>
                 <h1 className="left-title">Sistema SuperMarket</h1>
                 <p className="left-subtitle">Gerencie seu supermercado com eficiência e praticidade</p>
-                <svg className="illustration" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style={{stopColor: "rgba(255,255,255,0.3)", stopOpacity: "1"}}></stop>
-                            <stop offset="100%" style={{stopColor: "rgba(255,255,255,0.1)", stopOpacity: "1"}}></stop>
-                        </linearGradient>
-                    </defs>
-                    
-                </svg>
             </div>
         </div>
 
@@ -91,6 +90,12 @@ export default function indexScreen(props) {
                 </form>
             </div>
         </div>
+        <footer className="login-footer">
+            <span className="login-footer-mark" aria-hidden="true"></span>
+            <span>Sistema SuperMarket</span>
+            <span className="login-footer-divider" aria-hidden="true">·</span>
+            <span>Acesso restrito a usuários autorizados</span>
+        </footer>
     </div> 
 
     

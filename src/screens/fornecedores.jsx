@@ -22,7 +22,7 @@ const emptySupplier = {
   ativo: true
 };
 
-const emptyItem = { nome: '', codigo: '', unidade: 'un', quantidade: '1', preco_unitario: '' };
+const emptyItem = { produto_id: '', nome: '', codigo: '', unidade: 'un', quantidade: '1', preco_unitario: '' };
 
 const currency = (value) => Number(value || 0).toLocaleString('pt-BR', {
   style: 'currency',
@@ -40,6 +40,7 @@ function errorMessage(error) {
 export default function FornecedoresScreen() {
   const [suppliers, setSuppliers] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState(null);
@@ -60,12 +61,14 @@ export default function FornecedoresScreen() {
     setLoading(true);
     setError('');
     try {
-      const [supplierResult, orderResult] = await Promise.all([
+      const [supplierResult, orderResult, productResult] = await Promise.all([
         supplierApi('/suppliers'),
-        supplierApi('/purchase-orders')
+        supplierApi('/purchase-orders'),
+        supplierApi('/products')
       ]);
       setSuppliers(supplierResult.data || []);
       setOrders(orderResult.data || []);
+      setProducts(productResult.data || []);
     } catch (loadError) {
       setError(errorMessage(loadError));
     } finally {
@@ -178,6 +181,24 @@ export default function FornecedoresScreen() {
     ));
   };
 
+  const selectOrderProduct = (index, productId) => {
+    const product = products.find((item) => String(item.id) === productId);
+    setOrderItems((items) => items.map((item, itemIndex) => (
+      itemIndex === index
+        ? product
+          ? {
+            ...item,
+            produto_id: product.id,
+            nome: product.nome,
+            codigo: product.codigo || product.codigo_barras || '',
+            unidade: product.unidade || 'un',
+            preco_unitario: item.preco_unitario || String(product.preco_custo ?? '')
+          }
+          : { ...item, produto_id: '', nome: '', codigo: '', unidade: 'un', preco_unitario: '' }
+        : item
+    )));
+  };
+
   const orderTotal = orderItems.reduce((total, item) => (
     total + (Number(String(item.quantidade).replace(',', '.')) || 0) *
       (Number(String(item.preco_unitario).replace(',', '.')) || 0)
@@ -195,6 +216,7 @@ export default function FornecedoresScreen() {
           observacoes: orderForm.observacoes,
           itens: orderItems.map((item) => ({
             ...item,
+            produto_id: Number(item.produto_id),
             quantidade: Number(String(item.quantidade).replace(',', '.')),
             preco_unitario: Number(String(item.preco_unitario).replace(',', '.'))
           }))
@@ -241,9 +263,9 @@ export default function FornecedoresScreen() {
           <div className="supplier-items-title"><strong>Itens do pedido</strong><button type="button" className="supplier-text-button" onClick={() => setOrderItems((items) => [...items, { ...emptyItem }])}>+ Adicionar item</button></div>
           {orderItems.map((item, index) => (
             <div className="supplier-order-line" key={index}>
-              <label className="supplier-field supplier-item-name"><span>Produto</span><input required maxLength="160" value={item.nome} onChange={(event) => setItemField(index, 'nome', event.target.value)} placeholder="Nome do produto" /></label>
-              <label className="supplier-field"><span>Código</span><input maxLength="60" value={item.codigo} onChange={(event) => setItemField(index, 'codigo', event.target.value)} placeholder="Opcional" /></label>
-              <label className="supplier-field"><span>Unid.</span><select value={item.unidade} onChange={(event) => setItemField(index, 'unidade', event.target.value)}><option value="un">Un</option><option value="kg">Kg</option><option value="cx">Cx</option><option value="l">L</option><option value="pc">Pc</option></select></label>
+              <label className="supplier-field supplier-item-name"><span>Produto</span><select required value={item.produto_id} onChange={(event) => selectOrderProduct(index, event.target.value)}><option value="">Selecione um produto cadastrado</option>{products.map((product) => <option key={product.id} value={product.id}>{product.nome} · {product.codigo || product.codigo_barras || 'sem código'}</option>)}</select></label>
+              <label className="supplier-field"><span>Código</span><input value={item.codigo} readOnly aria-label="Código do produto selecionado" /></label>
+              <label className="supplier-field"><span>Unid.</span><input value={item.unidade.toUpperCase()} readOnly aria-label="Unidade do produto" /></label>
               <label className="supplier-field"><span>Qtd.</span><input required type="number" min="0.01" step="0.01" value={item.quantidade} onChange={(event) => setItemField(index, 'quantidade', event.target.value)} /></label>
               <label className="supplier-field"><span>Unitário (R$)</span><input required type="number" min="0" step="0.01" value={item.preco_unitario} onChange={(event) => setItemField(index, 'preco_unitario', event.target.value)} /></label>
               <button type="button" className="supplier-remove-line" onClick={() => setOrderItems((items) => items.filter((_, itemIndex) => itemIndex !== index))} disabled={orderItems.length === 1} aria-label={`Remover item ${index + 1}`}>×</button>
@@ -251,8 +273,8 @@ export default function FornecedoresScreen() {
           ))}
           <label className="supplier-field"><span>Observações para o fornecedor</span><textarea name="observacoes" rows="3" maxLength="2000" value={orderForm.observacoes} onChange={setOrderField} placeholder="Instruções de entrega, condições ou informações adicionais" /></label>
           <div className="supplier-order-total"><span>Total do pedido</span><strong>{currency(orderTotal)}</strong></div>
-          <p className="supplier-form-hint">O pedido será registrado no sistema e enviado para {orderSupplier.email || 'o e-mail do fornecedor'}.</p>
-          <footer className="supplier-modal-actions"><button type="button" className="button secondary" onClick={() => setOrderSupplier(null)} disabled={savingOrder}>Cancelar</button><button type="submit" className="button" disabled={savingOrder || !orderSupplier.email}>{savingOrder ? 'Enviando...' : 'Criar e enviar pedido'}</button></footer>
+          <p className="supplier-form-hint">Selecione produtos cadastrados. Ao receber o pedido, as quantidades serão adicionadas automaticamente ao estoque.</p>
+          <footer className="supplier-modal-actions"><button type="button" className="button secondary" onClick={() => setOrderSupplier(null)} disabled={savingOrder}>Cancelar</button><button type="submit" className="button" disabled={savingOrder || !orderSupplier.email || !products.length || orderItems.some((item) => !item.produto_id)}>{savingOrder ? 'Enviando...' : 'Criar e enviar pedido'}</button></footer>
         </form>
       </section>
     </div>

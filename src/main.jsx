@@ -14,7 +14,7 @@ const screens = {
   'adicionar-produto': lazy(() => import('./screens/adicionar-produto.jsx')),
   'adicionar-cliente': lazy(() => import('./screens/adicionar-cliente.jsx')),
   caixa: lazy(() => import('./screens/caixa.jsx')),
-  categorias: lazy(() => import('./screens/categorias.jsx')),
+  categorias: lazy(() => import('./screens/CategoriasPage.jsx')),
   clientes: lazy(() => import('./screens/clientes.jsx')),
   configuracoes: lazy(() => import('./screens/configuracoes.jsx')),
   contas: lazy(() => import('./screens/contas.jsx')),
@@ -82,6 +82,7 @@ function Application() {
   const [notification, setNotification] = useState(null);
   const [margin, setMargin] = useState('0.00%');
   const [registering, setRegistering] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [session, setSession] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -236,7 +237,7 @@ function Application() {
 
   const registerProduct = useCallback(async (event) => {
     event.preventDefault();
-    if (registering) return;
+    if (registering || imageLoading) return;
     const formElement = event.currentTarget;
     const value = (id) => String(formElement.elements.namedItem(id)?.value || '').trim();
     const required = [
@@ -251,14 +252,6 @@ function Application() {
       setNotification({ text: `Preencha o campo: ${missing[1]}.`, type: 'error' });
       return;
     }
-    if (action.includes('clearFilters()')) {
-      ['searchInput', 'categoryFilter', 'statusFilter'].forEach((id) => {
-        const field = document.getElementById(id);
-        if (field) field.value = '';
-      });
-      return;
-    }
-
     const values = ['productCost', 'productPrice', 'productStock', 'productMinStock'];
     const numeric = values.map((id) => {
       const raw = value(id).replace(',', '.');
@@ -288,7 +281,7 @@ function Application() {
       data_validade: value('productValidity'),
       peso_gramas: weight,
       localizacao: value('productLocation'),
-      imagem_url: null
+      imagem_data_url: uploadedImages[0] || null
     };
 
     setRegistering(true);
@@ -310,7 +303,7 @@ function Application() {
     } finally {
       setRegistering(false);
     }
-  }, [registering]);
+  }, [imageLoading, registering]);
 
   const updateMargin = (event) => {
     const cost = Number(String(event.target.form?.elements.productCost?.value || '0').replace(',', '.'));
@@ -528,19 +521,43 @@ function Application() {
   };
 
   const acceptImageFiles = (files) => {
-    Array.from(files || []).forEach((file) => {
-      if (!file.type.startsWith('image/')) {
-        setNotification({ text: 'Selecione apenas arquivos de imagem.', type: 'error' });
+    const selectedFiles = Array.from(files || []);
+    if (!selectedFiles.length) return;
+    if (uploadedImages.length) {
+      setNotification({ text: 'Remova a imagem atual antes de selecionar outra.', type: 'error' });
+      return;
+    }
+    if (selectedFiles.length > 1) {
+      setNotification({ text: 'Selecione apenas uma imagem para o produto.', type: 'error' });
+      return;
+    }
+
+    const [file] = selectedFiles;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setNotification({ text: 'Selecione uma imagem PNG, JPEG ou WEBP.', type: 'error' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setNotification({ text: 'A imagem deve ter no máximo 5 MB.', type: 'error' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageLoading(false);
+      if (typeof reader.result !== 'string') {
+        setNotification({ text: 'Não foi possível ler a imagem selecionada.', type: 'error' });
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        setNotification({ text: 'Cada imagem deve ter no máximo 5 MB.', type: 'error' });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => setUploadedImages((images) => [...images, String(reader.result)]);
-      reader.readAsDataURL(file);
-    });
+      setUploadedImages([reader.result]);
+      setNotification(null);
+    };
+    reader.onerror = () => {
+      setImageLoading(false);
+      setNotification({ text: 'Não foi possível ler a imagem selecionada.', type: 'error' });
+    };
+    setImageLoading(true);
+    reader.readAsDataURL(file);
   };
 
   const applyListFilter = (event) => {
@@ -667,10 +684,14 @@ function Application() {
             <Screen
               onSubmit={registerProduct}
               notification={notification}
-              registering={registering}
+              registering={registering || imageLoading}
               margin={margin}
               images={uploadedImages}
-              onRemoveImage={(index) => setUploadedImages((images) => images.filter((_, imageIndex) => imageIndex !== index))}
+              onRemoveImage={(index) => {
+                setUploadedImages((images) => images.filter((_, imageIndex) => imageIndex !== index));
+                const imageInput = document.getElementById('productImage');
+                if (imageInput) imageInput.value = '';
+              }}
             />
           ) : (
             <Screen />

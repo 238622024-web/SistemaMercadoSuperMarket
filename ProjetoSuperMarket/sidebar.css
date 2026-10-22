@@ -1155,36 +1155,112 @@
 
 .sidebar .sidebar-logout {
 
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  position: relative;
+
   width: 100%;
 
   margin-top: 8px;
 
-  padding: 7px 10px;
+  padding: 10px 12px;
 
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(251, 113, 133, 0.16);
 
-  border-radius: 9px;
+  border-radius: 11px;
 
-  color: #b7c1d8;
+  color: #f3b5bf;
 
-  background: rgba(255, 255, 255, 0.035);
+  background:
+    linear-gradient(135deg, rgba(190, 50, 76, 0.13), rgba(190, 50, 76, 0.055));
 
   font: inherit;
 
-  font-size: 11px;
+  font-size: 12px;
 
-  text-align: left;
+  font-weight: 600;
 
   cursor: pointer;
 
-  transition: color 160ms ease, background-color 160ms ease;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.sidebar .sidebar-logout-icon {
+
+  display: block;
+
+  flex: 0 0 18px;
+
+  width: 18px;
+  height: 18px;
+
+  opacity: 0.9;
+}
+
+.sidebar .sidebar-logout-label {
+
+  flex: 1;
+
+  text-align: left;
+}
+
+.sidebar .sidebar-logout-hint {
+
+  color: rgba(243, 181, 191, 0.58);
+
+  font-size: 10px;
+
+  font-weight: 500;
 }
 
 .sidebar .sidebar-logout:hover {
 
-  color: #fff;
+  color: #fff1f2;
 
-  background: rgba(255, 255, 255, 0.09);
+  background:
+    linear-gradient(135deg, rgba(190, 50, 76, 0.32), rgba(190, 50, 76, 0.15));
+
+  border-color: rgba(251, 113, 133, 0.35);
+
+  box-shadow: 0 5px 18px rgba(136, 19, 55, 0.16);
+
+  transform: translateY(-1px);
+}
+
+.sidebar .sidebar-logout:active {
+
+  transform: translateY(0);
+}
+
+.sidebar .sidebar-logout:focus-visible {
+
+  outline: 2px solid #fb7185;
+
+  outline-offset: 3px;
+}
+
+.sidebar.collapsed .sidebar-logout {
+
+  justify-content: center;
+
+  min-height: 42px;
+
+  padding: 10px;
+}
+
+.sidebar.collapsed .sidebar-logout-label,
+.sidebar.collapsed .sidebar-logout-hint {
+
+  display: none;
 }
 
 
@@ -1827,9 +1903,18 @@
   .sidebar:not(.mobile-visible) .nav-arrow,
   .sidebar:not(.mobile-visible) .nav-section-title,
   .sidebar:not(.mobile-visible) .user-info,
-  .sidebar:not(.mobile-visible) .user-more {
+  .sidebar:not(.mobile-visible) .user-more,
+  .sidebar:not(.mobile-visible) .sidebar-logout-label,
+  .sidebar:not(.mobile-visible) .sidebar-logout-hint {
 
     display: none;
+  }
+
+  .sidebar:not(.mobile-visible) .sidebar-logout {
+
+    justify-content: center;
+
+    padding: 10px;
   }
 
 

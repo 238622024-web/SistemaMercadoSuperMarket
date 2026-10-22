@@ -191,26 +191,76 @@ export default function produtosScreen(props) {
     </div>
 
     <div className="product-modal" id="productDetailsModal" role="dialog" aria-modal="true" aria-labelledby="productDetailsTitle" aria-describedby="productDetailsSubtitle" hidden={props.detailHidden} onClick={(event) => { if (event.target === event.currentTarget) props.onClose(); }}>
-      <section className="product-modal-card">
+      <section className={`product-modal-card${props.editing ? ' is-editing' : ''}`}>
         <header className="product-modal-header">
           <div>
-            <h2 id="productDetailsTitle">{props.product?.nome || "Detalhes do produto"}</h2>
-            <p id="productDetailsSubtitle">Informações cadastradas</p>
+            <span className="product-modal-eyebrow">{props.editing ? 'EDIÇÃO DE PRODUTO' : 'CONSULTA DE PRODUTO'}</span>
+            <h2 id="productDetailsTitle">{props.editing ? 'Editar produto' : (props.product?.nome || 'Detalhes do produto')}</h2>
+            <p id="productDetailsSubtitle">{props.editing ? 'Atualize os dados do cadastro abaixo.' : 'Confira as informações e a situação atual do item.'}</p>
           </div>
-          <button type="button" className="product-modal-close" id="closeProductDetails" aria-label="Fechar detalhes do produto" onClick={props.onClose}>
+          <button type="button" className="product-modal-close" id="closeProductDetails" aria-label="Fechar detalhes do produto" title="Fechar" onClick={props.onClose}>
             ×
           </button>
         </header>
-        <dl className="product-details-list" id="productDetailsList">{props.details}</dl>
-        <div className="product-modal-actions" id="productDetailsActions" hidden={!props.product}>
+        {props.product && <div className="product-modal-hero">
+          <div className="product-modal-image">
+            {props.product.imagem_url
+              ? <img src={props.product.imagem_url} alt={`Imagem de ${props.product.nome}`} />
+              : <span aria-hidden="true">▧</span>}
+          </div>
+          <div className="product-modal-summary">
+            <span className="product-modal-category">{props.categoryOptions?.find((item) => item.slug === props.product.categoria)?.nome || props.product.categoria || 'Sem categoria'}</span>
+            <strong>{props.product.nome}</strong>
+            <span className="product-modal-code">SKU {props.product.codigo || '—'}</span>
+            <div className="product-modal-highlights">
+              <span className={`product-modal-status ${props.product.ativo === false ? 'inactive' : 'active'}`}>
+                <i aria-hidden="true" />{props.product.ativo === false ? 'Inativo' : 'Ativo'}
+              </span>
+              <span className="product-modal-stock">Estoque <b>{Number(props.product.estoque_atual || 0).toLocaleString('pt-BR')} {props.product.unidade || 'UN'}</b></span>
+              <span className="product-modal-price">{Number(props.product.preco_venda || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+            </div>
+          </div>
+        </div>}
+        {!props.editing && <div className="product-details-heading"><div><h3>Informações do produto</h3><p>Dados registrados no sistema</p></div></div>}
+        <dl className="product-details-list" id="productDetailsList" hidden={!props.product || props.editing}>{props.details}</dl>
+        <div className="product-modal-actions" id="productDetailsActions" hidden={!props.product || props.editing}>
           <button type="button" className="product-modal-button secondary" id="editProductButton" onClick={props.onEdit}>
-            Editar
+            <span aria-hidden="true">✎</span> Editar dados
           </button>
-          <button type="button" className="product-modal-button danger" id="deactivateProductButton" onClick={props.onDeactivate}>
-            Desativar
-          </button>
+          {props.product?.ativo !== false && <button type="button" className="product-modal-button danger" id="deactivateProductButton" onClick={props.onDeactivate}>
+            Desativar produto
+          </button>}
         </div>
         <form className="product-edit-form" id="productEditForm" key={`${props.product?.id || ""}-${props.editing}`} hidden={!props.editing} onSubmit={props.onSave}>
+          <div className="product-edit-intro">
+            <span className="product-edit-section-icon" aria-hidden="true">✎</span>
+            <div><h3>Dados do produto</h3><p>Campos marcados são obrigatórios.</p></div>
+          </div>
+          <section className="product-edit-image" aria-label="Imagem do produto">
+            <div className="product-edit-image-preview">
+              {props.imageDataUrl
+                ? <img src={props.imageDataUrl} alt="Pré-visualização da nova imagem" />
+                : props.product?.imagem_url && !props.removeImage
+                  ? <img src={props.product.imagem_url} alt={`Imagem atual de ${props.product.nome}`} />
+                  : <span aria-hidden="true">▧</span>}
+            </div>
+            <div className="product-edit-image-copy">
+              <strong>Imagem do produto</strong>
+              <span>{props.imageName || (props.removeImage ? 'A imagem atual será removida ao salvar.' : props.product?.imagem_url ? 'Escolha uma imagem para substituir a atual.' : 'Adicione uma imagem para identificar o produto.')}</span>
+              <small>PNG, JPEG ou WEBP · até 5 MB</small>
+            </div>
+            <div className="product-edit-image-actions">
+              <label className="product-modal-button secondary product-image-select">
+                {props.imageDataUrl || props.product?.imagem_url ? 'Trocar imagem' : 'Adicionar imagem'}
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={props.onImageChange} aria-label="Selecionar imagem do produto" />
+              </label>
+              {(props.imageDataUrl || props.product?.imagem_url) && (
+                <button type="button" className="product-image-remove" onClick={props.onRemoveImage}>
+                  {props.removeImage ? 'Cancelar remoção' : props.imageDataUrl ? 'Desfazer troca' : 'Remover imagem'}
+                </button>
+              )}
+            </div>
+          </section>
           <div className="product-edit-grid">
             <label className="product-edit-field">
               Nome do produto
@@ -224,15 +274,12 @@ export default function produtosScreen(props) {
               Categoria
               <select name="categoria" required defaultValue={props.product?.["categoria"] ?? ''}>
                 <option value="">Selecione uma categoria</option>
-                <option value="alimentos">Alimentos</option>
-                <option value="bebidas">Bebidas</option>
-                <option value="higiene">Higiene e Limpeza</option>
-                <option value="frios">Frios e Laticínios</option>
-                <option value="hortifruti">Hortifrúti</option>
-                <option value="padaria">Padaria</option>
-                <option value="acougue">Açougue</option>
-                <option value="outros">Outros</option>
+                {props.categoryOptions?.filter((category) => category.ativo || category.slug === props.product?.categoria)
+                  .map((category) => <option key={category.slug} value={category.slug}>{category.nome}</option>)}
+                {props.product?.categoria && !props.categoryOptions?.some((category) => category.slug === props.product.categoria) &&
+                  <option value={props.product.categoria}>{props.product.categoria}</option>}
               </select>
+              {props.categoryLoadError && <small className="product-edit-error" role="alert">{props.categoryLoadError}</small>}
             </label>
             <label className="product-edit-field">
               Marca
@@ -240,7 +287,7 @@ export default function produtosScreen(props) {
             </label>
             <label className="product-edit-field product-edit-field-wide">
               Descrição
-              <textarea name="descricao" rows="3"></textarea>
+              <textarea name="descricao" rows="3" defaultValue={props.product?.descricao ?? ''}></textarea>
             </label>
             <label className="product-edit-field">
               Preço de custo (R$)
@@ -252,7 +299,8 @@ export default function produtosScreen(props) {
             </label>
             <label className="product-edit-field">
               Estoque atual
-              <input name="estoque_atual" type="number" min="0" step="any" required defaultValue={props.product?.["estoque_atual"] ?? ''} />
+              <input name="estoque_atual" type="number" min="0" step="any" readOnly defaultValue={props.product?.["estoque_atual"] ?? ''} />
+              <small>Use Controle de Estoque para registrar entradas e saídas.</small>
             </label>
             <label className="product-edit-field">
               Estoque mínimo
@@ -297,7 +345,7 @@ export default function produtosScreen(props) {
               <input name="localizacao" type="text" defaultValue={props.product?.["localizacao"] ?? ''} />
             </label>
           </div>
-          <p className="product-edit-error" id="productEditError" hidden={!props.error}>{props.error}</p>
+          {props.error && <p className="product-edit-error" id="productEditError" role="alert">{props.error}</p>}
           <div className="product-modal-actions">
             <button type="button" className="product-modal-button secondary" id="cancelProductEdit" onClick={props.onCancelEdit}>
               Cancelar
