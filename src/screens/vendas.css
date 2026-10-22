@@ -1,0 +1,47 @@
+.sales-load-error {
+  margin: 14px 20px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: #991b1b;
+  background: #fee2e2;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sale-items-details {
+  position: relative;
+}
+
+.sale-items-details summary {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 7px;
+  color: #475569;
+  background: #f1f5f9;
+  font-size: 22px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sale-items-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.sale-items-details ul {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  width: max-content;
+  max-width: min(360px, 70vw);
+  margin: 6px 0 0;
+  padding: 12px 14px 12px 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  color: #334155;
+  background: #fff;
+  box-shadow: 0 8px 24px #0f172a1a;
+  font-size: 12px;
+  line-height: 1.7;
+}

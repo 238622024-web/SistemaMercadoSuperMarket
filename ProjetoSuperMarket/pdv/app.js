@@ -310,6 +310,8 @@
               debit: "Cartão de Débito",
               credit: "Cartão de Crédito",
               pix: "PIX",
+              elo_meal: "Elo Refeição",
+              elo_food: "Elo Alimentação",
             };
 
             const itemsList = cart
@@ -393,4 +395,3 @@
         console.log("• F4: Limpar carrinho");
         console.log("• ESC: Focar na busca");
       
-

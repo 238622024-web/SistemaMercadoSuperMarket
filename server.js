@@ -893,6 +893,92 @@ app.patch(
     }
 );
 
+function responderErroVendas(res, error) {
+    console.error('Erro ao registrar ou consultar vendas do PDV.', error);
+    if (error.code === 'P0001') {
+        return res.status(409).json({ error: error.message || 'A venda não pode ser concluída.' });
+    }
+    if (error.code === '22P02' || error.code === '23514' || error.code === '23503') {
+        return res.status(400).json({ error: 'Os dados da venda são inválidos.' });
+    }
+    if (error.code === '42P01' || error.code === 'PGRST200' || error.code === 'PGRST202' || error.code === 'PGRST205') {
+        return res.status(503).json({
+            error: 'O registro de vendas do PDV ainda não foi configurado. Execute supabase/pdv-sales.sql no SQL Editor do Supabase e verifique se supabase/stock-management.sql também foi aplicado.'
+        });
+    }
+    if (error.code === '42501') {
+        return res.status(403).json({ error: 'O Supabase bloqueou a operação. Verifique a chave administrativa do servidor.' });
+    }
+    return res.status(500).json({ error: 'Não foi possível concluir a operação de venda.' });
+}
+
+app.get(
+    '/api/pdv/sales',
+    exigirSupabase,
+    exigirUsuario,
+    exigirAcessoPdv,
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        try {
+            let query = supabaseAdmin
+                .from('pdv_sales')
+                .select('id,sale_number,shift_id,operator_id,operator_name,register_number,payment_method,total,status,created_at,pdv_sale_items(id,product_id,product_name,quantity,unit_price,line_total)')
+                .order('created_at', { ascending: false })
+                .limit(200);
+
+            if (req.userProfile.role !== 'admin') {
+                query = query.eq('operator_id', req.authUser.id);
+            }
+
+            const { data, error } = await query;
+            if (error) return responderErroVendas(res, error);
+            return res.json({ data: data || [] });
+        } catch (error) {
+            return responderErroVendas(res, error);
+        }
+    }
+);
+
+app.post(
+    '/api/pdv/sales',
+    exigirSupabase,
+    exigirUsuario,
+    exigirAcessoPdv,
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const shiftId = String(req.body?.shiftId || '');
+        const paymentMethod = req.body?.paymentMethod;
+        const items = req.body?.items;
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const paymentMethods = new Set(['money', 'debit', 'credit', 'pix', 'elo_meal', 'elo_food']);
+
+        if (!uuidPattern.test(shiftId) || !paymentMethods.has(paymentMethod)
+            || !Array.isArray(items) || items.length < 1 || items.length > 100
+            || items.some((item) => !Number.isSafeInteger(item?.product_id)
+                || item.product_id <= 0
+                || typeof item.quantity !== 'number'
+                || !Number.isFinite(item.quantity)
+                || item.quantity <= 0
+                || item.quantity > 1000000
+                || Math.abs(item.quantity * 1000 - Math.round(item.quantity * 1000)) > 1e-7)) {
+            return res.status(400).json({ error: 'Informe um turno, forma de pagamento e itens válidos.' });
+        }
+
+        try {
+            const { data, error } = await supabaseAdmin.rpc('complete_pdv_sale', {
+                p_shift_id: shiftId,
+                p_operator_id: req.authUser.id,
+                p_payment_method: paymentMethod,
+                p_items: items
+            });
+            if (error) return responderErroVendas(res, error);
+            return res.status(201).json({ data });
+        } catch (error) {
+            return responderErroVendas(res, error);
+        }
+    }
+);
+
 app.post('/api/auth/login', exigirSupabase, async (req, res) => {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
     const password = typeof req.body?.password === 'string' ? req.body.password : '';

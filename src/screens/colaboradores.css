@@ -66,6 +66,38 @@
   box-shadow: 0 8px 24px #0f172a08;
 }
 
+.collaborators-help {
+  padding: 20px 22px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #eff6ff;
+}
+
+.collaborators-help h2 {
+  margin: 0 0 10px;
+  color: #1e3a8a;
+  font-size: 16px;
+}
+
+.collaborators-help details {
+  border-top: 1px solid #dbeafe;
+}
+
+.collaborators-help summary {
+  padding: 12px 0;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.collaborators-help details p {
+  margin: -2px 0 12px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .collaborators-intro h2,
 .collaborators-card h2 {
   margin: 0 0 8px;

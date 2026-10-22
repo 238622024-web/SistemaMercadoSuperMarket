@@ -26,6 +26,7 @@ const screens = {
   'pedidos-compra': lazy(() => import('./screens/pedidos-compra.jsx')),
   relatorios: lazy(() => import('./screens/relatorios.jsx')),
   vendas: lazy(() => import('./screens/vendas.jsx')),
+  ajuda: lazy(() => import('./screens/ajuda.jsx')),
   perfil: lazy(() => import('./screens/perfil.jsx')),
   colaboradores: lazy(() => import('./screens/colaboradores.jsx'))
 };
@@ -50,6 +51,7 @@ const pageTitles = {
   'pedidos-compra': 'Pedidos de Compra - Mercado Super Market',
   relatorios: 'Relatórios de Vendas - Mercado Super Market',
   vendas: 'Histórico de Vendas - Mercado Super Market',
+  ajuda: 'Ajuda - Mercado Super Market',
   perfil: 'Meu Perfil - Mercado Super Market',
   colaboradores: 'Colaboradores - Mercado Super Market'
 };
@@ -564,7 +566,6 @@ function Application() {
     const input = event.target;
     const id = input.id;
     const tableConfig = {
-      vendas: { table: 'salesTable', term: 'search', filter: 'payment', count: 'salesCount', empty: 'empty', badge: 'payment' },
       fornecedores: { table: 'supplierTable', term: 'search', filter: 'status', count: 'supplierCount', empty: 'empty', badge: 'status' },
       'pedidos-compra': { table: 'orderTable', term: 'search', filter: 'status', count: 'orderCount', empty: 'empty', badge: 'status' }
     }[name];

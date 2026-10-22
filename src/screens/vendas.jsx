@@ -1,8 +1,72 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import pageCss from '../../ProjetoSuperMarket/vendas/style.css?inline';
+import salesCss from './vendas.css?inline';
 import sidebarCss from "../../ProjetoSuperMarket/sidebar.css?inline";
 import Sidebar from "../Sidebar.jsx";
-export default function vendasScreen(props) {
-  return <><style>{pageCss}</style><style>{sidebarCss}</style><div className="legacy-screen">
+import { authorizedFetch } from '../auth.js';
+
+const paymentLabels = {
+  money: 'Dinheiro',
+  debit: 'Cartão de débito',
+  credit: 'Cartão de crédito',
+  pix: 'PIX',
+  elo_meal: 'Elo Refeição',
+  elo_food: 'Elo Alimentação'
+};
+const currency = (value) => Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const formatSaleDate = (value) => new Date(value).toLocaleString('pt-BR');
+
+export default function vendasScreen() {
+  const [sales, setSales] = useState([]);
+  const [search, setSearch] = useState('');
+  const [payment, setPayment] = useState('');
+  const [period, setPeriod] = useState('7d');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadSales = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await authorizedFetch('/api/pdv/sales');
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Não foi possível carregar o histórico de vendas.');
+      setSales(Array.isArray(result.data) ? result.data : []);
+    } catch (failure) {
+      setError(failure.message || 'Não foi possível carregar o histórico de vendas.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadSales();
+  }, [loadSales]);
+
+  const filteredSales = useMemo(() => {
+    const now = new Date();
+    let startDate = null;
+    if (period === 'today') startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (period === '7d') startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    if (period === '30d') startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    if (period === 'month') startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const term = search.trim().toLocaleLowerCase('pt-BR');
+
+    return sales.filter((sale) => {
+      const matchesPeriod = !startDate || new Date(sale.created_at) >= startDate;
+      const matchesPayment = !payment || sale.payment_method === payment;
+      const matchesSearch = !term || `${sale.sale_number} ${sale.operator_name} ${paymentLabels[sale.payment_method] || sale.payment_method}`
+        .toLocaleLowerCase('pt-BR').includes(term);
+      return matchesPeriod && matchesPayment && matchesSearch;
+    });
+  }, [payment, period, sales, search]);
+
+  const total = filteredSales.reduce((sum, sale) => sum + Number(sale.total || 0), 0);
+  const average = filteredSales.length ? total / filteredSales.length : 0;
+  const soldUnits = filteredSales.reduce((sum, sale) =>
+    sum + (sale.pdv_sale_items || []).reduce((itemSum, item) => itemSum + Number(item.quantity || 0), 0), 0);
+
+  return <><style>{pageCss}</style><style>{salesCss}</style><style>{sidebarCss}</style><div className="legacy-screen">
     <div className="app">
       <Sidebar />
       <div className="mobile-overlay" id="overlay"></div>
@@ -30,50 +94,49 @@ export default function vendasScreen(props) {
           </div>
           <div className="toolbar">
             <div className="field">
-              <label htmlFor="period">Período</label><select id="period">
-                <option>Hoje</option>
-                <option selected>Últimos 7 dias</option>
-                <option>Últimos 30 dias</option>
-                <option>Este mês</option>
+              <label htmlFor="period">Período</label><select id="period" value={period} onChange={(event) => setPeriod(event.target.value)}>
+                <option value="today">Hoje</option>
+                <option value="7d">Últimos 7 dias</option>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="month">Este mês</option>
+                <option value="all">Todo o período</option>
               </select>
             </div>
             <div className="field">
-              <label htmlFor="search">Buscar venda</label><input id="search" type="search" placeholder="Código ou cliente" />
+              <label htmlFor="search">Buscar venda</label><input id="search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Código ou operador" />
             </div>
             <div className="field">
-              <label htmlFor="payment">Pagamento</label><select id="payment">
+              <label htmlFor="payment">Pagamento</label><select id="payment" value={payment} onChange={(event) => setPayment(event.target.value)}>
                 <option value="">Todos</option>
-                <option>Pix</option>
-                <option>Cartão</option>
-                <option>Dinheiro</option>
+                {Object.entries(paymentLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
               </select>
             </div>
-            <button className="button" type="button" data-legacy-action="filterSales()">
+            <button className="button" type="button" onClick={() => void loadSales()} disabled={loading}>
               <svg viewBox="0 0 24 24">
-                <path d="M9.5 3a6.5 6.5 0 0 0 0 13c1.61 0 3.09-.59 4.23-1.57L19.29 20 20.7 18.59l-5.98-5.98A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 0 0 9.5 3zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"></path></svg>Filtrar</button><button className="button secondary" type="button" data-legacy-action="window.print()">
+                <path d="M9.5 3a6.5 6.5 0 0 0 0 13c1.61 0 3.09-.59 4.23-1.57L19.29 20 20.7 18.59l-5.98-5.98A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 0 0 9.5 3zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"></path></svg>Atualizar</button><button className="button secondary" type="button" data-legacy-action="window.print()">
               Exportar
             </button>
           </div>
           <div className="stats">
             <div className="stat">
               <div className="stat-label">Vendas no período</div>
-              <div className="stat-value" id="salesCount">48</div>
-              <div className="stat-meta">+12,5% vs. período anterior</div>
+              <div className="stat-value" id="salesCount">{loading ? '—' : filteredSales.length}</div>
+              <div className="stat-meta">Vendas registradas no período</div>
             </div>
             <div className="stat">
               <div className="stat-label">Faturamento</div>
-              <div className="stat-value">R$ 8.642,80</div>
-              <div className="stat-meta">+8,2% vs. período anterior</div>
+              <div className="stat-value">{loading ? '—' : currency(total)}</div>
+              <div className="stat-meta">Soma das vendas encontradas</div>
             </div>
             <div className="stat">
               <div className="stat-label">Ticket médio</div>
-              <div className="stat-value">R$ 180,06</div>
-              <div className="stat-meta neutral">Por venda realizada</div>
+              <div className="stat-value">{loading ? '—' : currency(average)}</div>
+              <div className="stat-meta neutral">Média por venda</div>
             </div>
             <div className="stat">
-              <div className="stat-label">Cancelamentos</div>
-              <div className="stat-value">2</div>
-              <div className="stat-meta neutral">4,1% das vendas</div>
+              <div className="stat-label">Itens vendidos</div>
+              <div className="stat-value">{loading ? '—' : soldUnits.toLocaleString('pt-BR', { maximumFractionDigits: 3 })}</div>
+              <div className="stat-meta neutral">Quantidade total no período</div>
             </div>
           </div>
           <div className="panel">
@@ -81,18 +144,19 @@ export default function vendasScreen(props) {
               <div>
                 <div className="panel-title">Vendas realizadas</div>
                 <div className="panel-caption">
-                  48 registros encontrados no período selecionado
+                  {loading ? 'Carregando vendas...' : `${filteredSales.length} registros encontrados`}
                 </div>
               </div>
-              <span className="status">Operação normal</span>
+              <button className="button secondary" type="button" onClick={() => void loadSales()} disabled={loading}>Atualizar lista</button>
             </div>
+            {error && <p className="sales-load-error" role="alert">{error}</p>}
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>Venda</th>
                     <th>Data e hora</th>
-                    <th>Cliente</th>
+                    <th>Operador / Caixa</th>
                     <th>Pagamento</th>
                     <th>Valor</th>
                     <th>Status</th>
@@ -100,76 +164,25 @@ export default function vendasScreen(props) {
                   </tr>
                 </thead>
                 <tbody id="salesTable">
-                  <tr>
-                    <td><strong>#V-1048</strong></td>
-                    <td>21/09/2026, 14:32</td>
-                    <td>Consumidor final</td>
-                    <td className="payment">Pix</td>
-                    <td><strong>R$ 286,40</strong></td>
-                    <td><span className="status">Concluída</span></td>
-                    <td>
-                      <button className="action" data-legacy-action="showSale('#V-1048')" aria-label="Ver detalhes">
-                        ›
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>#V-1047</strong></td>
-                    <td>21/09/2026, 14:05</td>
-                    <td>Mariana Oliveira</td>
-                    <td className="payment">Cartão</td>
-                    <td><strong>R$ 94,90</strong></td>
-                    <td><span className="status">Concluída</span></td>
-                    <td>
-                      <button className="action" data-legacy-action="showSale('#V-1047')" aria-label="Ver detalhes">
-                        ›
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>#V-1046</strong></td>
-                    <td>21/09/2026, 13:48</td>
-                    <td>Consumidor final</td>
-                    <td className="payment">Dinheiro</td>
-                    <td><strong>R$ 412,75</strong></td>
-                    <td><span className="status">Concluída</span></td>
-                    <td>
-                      <button className="action" data-legacy-action="showSale('#V-1046')" aria-label="Ver detalhes">
-                        ›
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>#V-1045</strong></td>
-                    <td>21/09/2026, 13:21</td>
-                    <td>João Santos</td>
-                    <td className="payment">Pix</td>
-                    <td><strong>R$ 158,20</strong></td>
-                    <td><span className="status">Concluída</span></td>
-                    <td>
-                      <button className="action" data-legacy-action="showSale('#V-1045')" aria-label="Ver detalhes">
-                        ›
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>#V-1044</strong></td>
-                    <td>21/09/2026, 12:57</td>
-                    <td>Consumidor final</td>
-                    <td className="payment">Cartão</td>
-                    <td><strong>R$ 76,50</strong></td>
-                    <td><span className="status cancelled">Cancelada</span></td>
-                    <td>
-                      <button className="action" data-legacy-action="showSale('#V-1044')" aria-label="Ver detalhes">
-                        ›
-                      </button>
-                    </td>
-                  </tr>
+                  {loading ? <tr><td colSpan="7" role="status">Carregando vendas...</td></tr> :
+                    filteredSales.length ? filteredSales.map((sale) => (
+                      <tr key={sale.id}>
+                        <td><strong>#{sale.sale_number}</strong></td>
+                        <td>{formatSaleDate(sale.created_at)}</td>
+                        <td>{sale.operator_name} · Caixa {sale.register_number}</td>
+                        <td className="payment">{paymentLabels[sale.payment_method] || sale.payment_method}</td>
+                        <td><strong>{currency(sale.total)}</strong></td>
+                        <td><span className="status">Concluída</span></td>
+                        <td>
+                          <details className="sale-items-details">
+                            <summary aria-label={`Ver itens da venda ${sale.sale_number}`}>›</summary>
+                            <ul>{(sale.pdv_sale_items || []).map((item) => <li key={item.id}>{item.product_name} — {Number(item.quantity).toLocaleString('pt-BR', { maximumFractionDigits: 3 })} × {currency(item.unit_price)}</li>)}</ul>
+                          </details>
+                        </td>
+                      </tr>
+                    )) : <tr><td colSpan="7">Nenhuma venda registrada para os filtros selecionados.</td></tr>}
                 </tbody>
               </table>
-              <div className="empty" id="empty">
-                Nenhuma venda encontrada com os filtros informados.
-              </div>
             </div>
           </div>
         </section>

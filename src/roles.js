@@ -7,9 +7,9 @@ export const ROLE_LABELS = {
 
 export const ROLE_ROUTES = {
   admin: null,
-  cashier: ['pdv', 'etiqueta-gondola', 'perfil'],
-  product_clerk: ['adicionar-produto', 'estoque', 'etiqueta-gondola', 'perfil'],
-  cashier_product: ['pdv', 'adicionar-produto', 'estoque', 'etiqueta-gondola', 'perfil']
+  cashier: ['pdv', 'vendas', 'etiqueta-gondola', 'perfil', 'ajuda'],
+  product_clerk: ['adicionar-produto', 'estoque', 'etiqueta-gondola', 'perfil', 'ajuda'],
+  cashier_product: ['pdv', 'vendas', 'adicionar-produto', 'estoque', 'etiqueta-gondola', 'perfil', 'ajuda']
 };
 
 export function roleLabel(role) {

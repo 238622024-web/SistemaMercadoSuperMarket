@@ -104,6 +104,22 @@ export default function ColaboradoresScreen() {
                 <p>Escolha o cargo de acordo com a função. Somente administradores gerenciam todos os dados; os outros cargos têm acesso restrito às páginas necessárias ao trabalho.</p>
               </section>
 
+              <section className="collaborators-help" aria-labelledby="collaboratorsHelpTitle">
+                <h2 id="collaboratorsHelpTitle">Ajuda rápida</h2>
+                <details>
+                  <summary>Como criar o acesso de um colaborador?</summary>
+                  <p>Preencha nome, e-mail, cargo e senha inicial no formulário. Compartilhe a senha diretamente com o colaborador; ele deverá criar uma senha pessoal no primeiro acesso.</p>
+                </details>
+                <details>
+                  <summary>Como escolher o cargo correto?</summary>
+                  <p>Operador de Caixa acessa o PDV e etiquetas; Cadastro de Produtos gerencia produtos e etiquetas; Caixa e Produtos combina essas funções. Administrador tem acesso amplo ao sistema.</p>
+                </details>
+                <details>
+                  <summary>Como bloquear ou restaurar um acesso?</summary>
+                  <p>Use Desativar ou Reativar na linha do colaborador. Um usuário não pode desativar a própria conta.</p>
+                </details>
+              </section>
+
               {notice && <div className={`collaborators-notice ${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'}>{notice.text}</div>}
 
               <section className="collaborators-card">
