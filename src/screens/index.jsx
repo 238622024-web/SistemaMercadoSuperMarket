@@ -31,6 +31,9 @@ export default function indexScreen(props) {
                 <h1 className="left-title">Sistema SuperMarket</h1>
                 <p className="left-subtitle">Gerencie seu supermercado com eficiência e praticidade</p>
             </div>
+            <footer className="login-footer">
+                Copyright © 2026 · Sistema SuperMarket
+            </footer>
         </div>
 
         
@@ -90,12 +93,6 @@ export default function indexScreen(props) {
                 </form>
             </div>
         </div>
-        <footer className="login-footer">
-            <span className="login-footer-mark" aria-hidden="true"></span>
-            <span>Sistema SuperMarket</span>
-            <span className="login-footer-divider" aria-hidden="true">·</span>
-            <span>Acesso restrito a usuários autorizados</span>
-        </footer>
     </div> 
 
     

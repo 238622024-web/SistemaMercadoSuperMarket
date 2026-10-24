@@ -36,7 +36,6 @@
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  padding-bottom: 54px;
 }
 
 .login-screen .left-side,
@@ -45,8 +44,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 54px);
-  min-height: calc(100dvh - 54px);
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .login-screen .left-side {
@@ -58,7 +57,7 @@
     radial-gradient(ellipse at 13% 10%, rgba(102, 126, 234, 0.24), transparent 36%),
     radial-gradient(ellipse at 95% 88%, rgba(83, 103, 218, 0.16), transparent 34%),
     linear-gradient(155deg, #172442 0%, #101c34 54%, #0a1327 100%);
-  animation: loginSideFade 700ms ease-out both;
+  animation: loginSideSlideIn 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .login-screen .left-side::before,
@@ -601,36 +600,14 @@
 
 .login-screen .login-footer {
   position: absolute;
-  z-index: 4;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  min-height: 54px;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 20px;
-  border-top: 1px solid #e8edf5;
-  background: rgba(255, 255, 255, 0.94);
-  color: #78869c;
+  z-index: 2;
+  right: 20px;
+  bottom: 20px;
+  left: 20px;
+  color: rgba(232, 237, 255, 0.68);
   font-size: 12px;
   letter-spacing: 0.01em;
   text-align: center;
-  backdrop-filter: blur(12px);
-}
-
-.login-screen .login-footer-mark {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-  border-radius: 50%;
-  background: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
-}
-
-.login-screen .login-footer-divider {
-  color: #b1bbca;
 }
 
 @keyframes loginSideFade {
@@ -640,6 +617,16 @@
 
   to {
     opacity: 1;
+  }
+}
+
+@keyframes loginSideSlideIn {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
   }
 }
 
@@ -785,8 +772,8 @@
 
   .login-screen .right-side {
     flex: 1;
-    min-height: calc(100vh - 54px);
-    min-height: calc(100dvh - 54px);
+    min-height: 100vh;
+    min-height: 100dvh;
     padding: 28px 20px;
   }
 
@@ -822,12 +809,6 @@
     text-align: left;
   }
 
-  .login-screen .login-footer {
-    flex-wrap: wrap;
-    gap: 6px 8px;
-    padding: 10px 12px;
-    font-size: 10px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
