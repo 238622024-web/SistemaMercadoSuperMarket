@@ -42,7 +42,7 @@ const pageTitles = {
   categorias: 'Categorias - Mercado Super Market',
   clientes: 'Lista de Clientes - Mercado Super Market',
   configuracoes: 'Configurações - Mercado Super Market',
-  contas: 'Contas a Pagar e Receber - Mercado Super Market',
+  contas: 'Contas a Pagar - Mercado Super Market',
   estoque: 'Controle de Estoque - Mercado Super Market',
   'etiqueta-gondola': 'Etiqueta de Gôndola - Mercado Super Market',
   'fluxo-caixa': 'Fluxo de Caixa - Mercado Super Market',

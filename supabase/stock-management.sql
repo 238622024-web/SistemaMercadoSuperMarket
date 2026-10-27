@@ -33,8 +33,8 @@ security definer
 set search_path = public
 as $$
 declare
-    v_before numeric(14, 3);
-    v_after numeric(14, 3);
+    v_before numeric(14, 3)./;
+    v_after numeric(14, 3);l
     v_delta numeric(14, 3);
     v_movement_id bigint;
     v_tipo text;

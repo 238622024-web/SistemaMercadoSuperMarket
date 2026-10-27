@@ -18,9 +18,18 @@ arquivo `.env`; nunca configure a chave secreta no frontend.
 
 ## Fornecedores e pedidos de compra
 
-Antes de usar **Fornecedores**, execute [`suppliers-purchase-orders.sql`](./supabase/suppliers-purchase-orders.sql)
-no SQL Editor do Supabase. A API exige uma `SUPABASE_SERVICE_ROLE_KEY` válida no
-servidor e permite a gestão somente a usuários administradores.
+Antes de usar **Fornecedores** e **Contas a Pagar**, execute
+[`suppliers-purchase-orders.sql`](./supabase/suppliers-purchase-orders.sql) no
+SQL Editor do Supabase. Se já tinha aplicado uma versão anterior do script,
+execute-o novamente para criar e preencher as despesas. A API exige uma
+`SUPABASE_SERVICE_ROLE_KEY` válida no servidor e permite a gestão somente a
+usuários administradores.
+
+O mesmo script cria a tabela de despesas a pagar, transforma os pedidos de compra
+existentes em despesas e instala o gatilho que cadastra automaticamente uma
+despesa para cada novo pedido. O vencimento é calculado com o prazo de pagamento
+do fornecedor; despesas manuais podem ser cadastradas e marcadas como pagas na
+tela **Contas a Pagar**.
 
 Para enviar pedidos por e-mail, configure `SMTP_HOST`, `SMTP_PORT`,
 `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` e `SMTP_FROM` no `.env`. Se o SMTP

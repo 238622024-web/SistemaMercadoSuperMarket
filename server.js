@@ -536,6 +536,25 @@ function responderErroFornecedores(res, error) {
     });
 }
 
+function responderErroFinanceiro(res, error) {
+    console.error('Erro ao acessar despesas financeiras:', error);
+    if (error.code === '23505') {
+        return res.status(409).json({ error: 'Esta despesa já está vinculada a um pedido de compra.' });
+    }
+    if (error.code === '23514' || error.code === '22P02' || error.code === '22007') {
+        return res.status(400).json({ error: 'Os dados da despesa são inválidos. Confira os campos e tente novamente.' });
+    }
+    if (error.code === '42P01' || error.code === 'PGRST205') {
+        return res.status(503).json({
+            error: 'A tabela de despesas ainda não foi criada. Execute supabase/suppliers-purchase-orders.sql no SQL Editor do Supabase.'
+        });
+    }
+    if (error.code === '42501') {
+        return res.status(403).json({ error: 'O Supabase bloqueou o acesso às despesas. Verifique a chave administrativa do servidor.' });
+    }
+    return res.status(500).json({ error: 'Não foi possível concluir a operação financeira.' });
+}
+
 function transporterEmail() {
     const faltando = EMAIL_FIELDS.filter((campo) => !process.env[campo]);
     if (faltando.length) {
@@ -2063,6 +2082,101 @@ app.patch(
             return res.json({ data });
         } catch (error) {
             return responderErroFornecedores(res, error);
+        }
+    }
+);
+
+app.get(
+    '/api/financial-expenses',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        try {
+            const { data, error } = await supabaseAdmin.from('financial_expenses')
+                .select('*').order('data_vencimento', { ascending: true }).limit(1000);
+            if (error) return responderErroFinanceiro(res, error);
+            return res.json({ data: data || [] });
+        } catch (error) {
+            return responderErroFinanceiro(res, error);
+        }
+    }
+);
+
+app.post(
+    '/api/financial-expenses',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const descricao = typeof req.body?.descricao === 'string' ? req.body.descricao.trim() : '';
+        const fornecedor = textoOpcional(req.body?.fornecedor);
+        const categoria = typeof req.body?.categoria === 'string' ? req.body.categoria.trim() : '';
+        const valor = Number(req.body?.valor);
+        const vencimento = dataIsoValida(req.body?.data_vencimento);
+        if (descricao.length < 2 || descricao.length > 160) {
+            return res.status(400).json({ error: 'A descrição deve ter entre 2 e 160 caracteres.' });
+        }
+        if (fornecedor && fornecedor.length > 160) {
+            return res.status(400).json({ error: 'O fornecedor deve ter no máximo 160 caracteres.' });
+        }
+        if (categoria.length < 2 || categoria.length > 80) {
+            return res.status(400).json({ error: 'A categoria deve ter entre 2 e 80 caracteres.' });
+        }
+        if (!Number.isFinite(valor) || valor <= 0 || valor > 9999999999.99) {
+            return res.status(400).json({ error: 'Informe um valor maior que zero e dentro do limite permitido.' });
+        }
+        if (!vencimento) {
+            return res.status(400).json({ error: 'Informe uma data de vencimento válida.' });
+        }
+        try {
+            const { data, error } = await supabaseAdmin.from('financial_expenses').insert({
+                descricao,
+                fornecedor,
+                categoria,
+                valor: Math.round(valor * 100) / 100,
+                data_vencimento: vencimento
+            }).select('*').single();
+            if (error) return responderErroFinanceiro(res, error);
+            return res.status(201).json({ data });
+        } catch (error) {
+            return responderErroFinanceiro(res, error);
+        }
+    }
+);
+
+app.patch(
+    '/api/financial-expenses/:id/status',
+    exigirSupabase,
+    exigirUsuario,
+    exigirPapel('admin'),
+    exigirBancoAdministrativo,
+    async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0 || req.body?.status !== 'paid') {
+            return res.status(400).json({ error: 'Informe uma despesa válida para marcar como paga.' });
+        }
+        try {
+            const paidAt = new Date().toISOString();
+            const { data, error } = await supabaseAdmin.from('financial_expenses')
+                .update({ status: 'paid', paid_at: paidAt, updated_at: paidAt })
+                .eq('id', id).eq('status', 'pending').select('*').maybeSingle();
+            if (error) return responderErroFinanceiro(res, error);
+            if (!data) {
+                const { data: existing, error: lookupError } = await supabaseAdmin
+                    .from('financial_expenses').select('id,status').eq('id', id).maybeSingle();
+                if (lookupError) return responderErroFinanceiro(res, lookupError);
+                return res.status(existing ? 409 : 404).json({
+                    error: existing
+                        ? 'Esta despesa já foi marcada como paga.'
+                        : 'Despesa não encontrada.'
+                });
+            }
+            return res.json({ data });
+        } catch (error) {
+            return responderErroFinanceiro(res, error);
         }
     }
 );
