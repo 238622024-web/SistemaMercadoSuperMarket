@@ -1,0 +1,5 @@
+update auth.users
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+  || '{"role":"admin","is_active":true,"must_change_password":false}'::jsonb
+where lower(email) = lower('keila@supermarket.com.br')
+returning email, raw_app_meta_data;
